@@ -14,7 +14,7 @@ Nossa história, nossos planos e a vida a dois. **Versão 2: GitHub Pages + Supa
 
 ## Publicar no GitHub Pages
 
-Os arquivos **já compilados estão em `docs/`**, com caminhos relativos. A aplicação não faz chamadas para o servidor da versão anterior.
+Os arquivos **já compilados estão em `docs/`**, com caminhos relativos. A entrada da raiz no GitHub Pages redireciona automaticamente para `docs/` quando o Pages estiver configurado para publicar a raiz; o build remove esse redirecionamento da versão compilada para evitar loops. A aplicação não faz chamadas para o servidor da versão anterior.
 
 1. No repositório, abra **Settings → Pages**.
 2. Em **Build and deployment → Source**, escolha **Deploy from a branch**.
