@@ -35,9 +35,9 @@ pnpm build:pages
 
 ## Escolher e configurar o Supabase
 
-**Nenhum projeto existente foi alterado nesta etapa.** Foram encontrados sete projetos, todos ativos e com registros: SHKTWEB, WORKSPACE, GRASSI PDV ERP, PontoNorte, Floralis PDV ERP, CPUSIS Cursos e ONG01.
+**Banco selecionado: WORKSPACE (`qaiqflcxfxygynumapyp`).** O aplicativo usa tabelas `namora_*`, regras RLS por casal e funções próprias no schema `namora_private`. A configuração pública já aponta para esse projeto. As tabelas dos outros aplicativos foram preservadas.
 
-Depois de escolher um projeto:
+A instalação no WORKSPACE já foi aplicada. Para reinstalar ou configurar outro ambiente:
 
 1. Execute **`supabase/namora-install.sql`** no SQL Editor desse projeto. O script cria apenas tabelas `namora_*` e o schema privado `namora_private`, sem modificar tabelas de outros aplicativos. É preferível usar um projeto separado; reaproveitar um projeto também compartilha autenticação e limites de recursos.
 2. Em **Authentication → URL Configuration**, inclua a URL exata publicada pelo Pages em Site URL/Redirect URLs para os e-mails de confirmação e recuperação. Não altere o Site URL de um projeto compartilhado sem avaliar os outros apps; nesse caso, preserve o existente e adicione apenas a URL do (N)amora à lista de redirects.
@@ -73,4 +73,4 @@ pnpm test:supabase
 
 Os testes verificam datas anuais (inclusive 29/02), distância, caminhos relativos e ausência de dependência do servidor anterior. O teste PostgreSQL/RLS usa **PGlite local**, aplica o script em banco temporário e verifica convites, isolamento entre casais, operações, despesas, memórias, ideias, localização e revogação de acesso. Não altera os projetos Supabase conectados.
 
-A integração real de Auth/Realtime/e-mails deve ser verificada novamente depois da escolha e configuração do projeto. A pasta `docs/` é o resultado do build; não edite seus arquivos gerados manualmente.
+O schema, as regras de acesso e a publicação Realtime foram verificados no WORKSPACE. E-mails de confirmação/recuperação dependem da lista de Redirect URLs do projeto, que deve incluir o endereço final do Pages sem substituir as URLs dos outros aplicativos. A pasta `docs/` é o resultado do build; não edite seus arquivos gerados manualmente.
