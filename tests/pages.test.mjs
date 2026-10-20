@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';import ts from 'typescript';import fs from 'node:fs';
+const source=ts.transpileModule(fs.readFileSync(new URL('../web/history.ts',import.meta.url),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const{nextAnniversary,daysUntil,distanceKm,upcomingMilestones}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+test('anniversary today remains today',()=>{const now=new Date(2026,9,20,22);assert.equal(daysUntil(nextAnniversary('2024-10-20',now),now),0);});
+test('passed anniversary advances to next year',()=>assert.equal(nextAnniversary('2024-02-10',new Date(2026,9,20)).getFullYear(),2027));
+test('leap day anniversary lands on February 28 in non-leap years',()=>{const d=nextAnniversary('2024-02-29',new Date(2026,0,1));assert.equal(d.getMonth(),1);assert.equal(d.getDate(),28);});
+test('leap day stays on February 29 in leap years',()=>assert.equal(nextAnniversary('2024-02-29',new Date(2028,0,1)).getDate(),29));
+test('map distance is symmetric and zero for identical points',()=>{const a={latitude:'-10',longitude:'-68'},b={latitude:'-10.01',longitude:'-68.01'};assert.equal(distanceKm(a,a),0);assert.ok(distanceKm(a,b)>1);assert.ok(Math.abs(distanceKm(a,b)-distanceKm(b,a))<.000001);});
+test('disabled reminders are excluded and one-off past dates do not return',()=>{const item=(date,annual,remind)=>({id:date,data:{kind:'milestone',date,annual,remind,title:'Memory'}});assert.equal(upcomingMilestones([item('2020-01-01',false,true),item('2026-12-20',true,false),item('2026-11-20',true,true)],new Date(2026,9,20)).length,1);});
+test('Pages build uses relative assets and has no first-party server API dependency',()=>{const html=fs.readFileSync('dist-pages/index.html','utf8');assert.ok(!html.includes('src="/assets/'));for(const name of fs.readdirSync('dist-pages/assets').filter(x=>x.endsWith('.js'))){const code=fs.readFileSync('dist-pages/assets/'+name,'utf8');assert.ok(!code.includes('/api/state'));assert.ok(!code.includes('/signin-with-chatgpt'));assert.ok(!code.includes('/api/action'));}});

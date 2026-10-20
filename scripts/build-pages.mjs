@@ -1,0 +1,3 @@
+import{spawnSync}from'node:child_process';import{rmSync,mkdirSync,cpSync,writeFileSync}from'node:fs';import path from'node:path';
+const root=path.resolve(import.meta.dirname,'..');const r=spawnSync(process.execPath,[path.join(root,'node_modules/vite/bin/vite.js'),'build','--config','vite.pages.config.ts'],{cwd:root,stdio:'inherit',env:process.env});if(r.status!==0)process.exit(r.status||1);
+const out=path.join(root,'docs');rmSync(out,{recursive:true,force:true});mkdirSync(out,{recursive:true});cpSync(path.join(root,'dist-pages'),out,{recursive:true});writeFileSync(path.join(out,'.nojekyll'),'');console.log('GitHub Pages ready: docs/ (main branch)');
