@@ -1,0 +1,3 @@
+[functions.amora]
+# Gateway JWT verification stays enabled; the function also validates auth.getUser.
+verify_jwt = true
