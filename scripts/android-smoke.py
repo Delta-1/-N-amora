@@ -18,8 +18,11 @@ def screenshot(name):
 def wait_ui(predicate, label):
     for _ in range(15):
         time.sleep(2)
-        shell('uiautomator', 'dump', '/sdcard/amora.xml')
-        result = shell('cat', '/sdcard/amora.xml')
+        dump = shell('uiautomator', 'dump', '/sdcard/amora.xml')
+        if 'UI hierchary dumped' not in dump and 'UI hierarchy dumped' not in dump:
+            continue  # Android may still be relaunching the WebView window.
+        result = subprocess.run(['adb', 'shell', 'cat', '/sdcard/amora.xml'],
+                                capture_output=True, text=True).stdout
         Path('android-smoke-ui.xml').write_text(result)
         if predicate(result):
             print('PASS:', label, flush=True)
