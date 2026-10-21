@@ -5,7 +5,7 @@ import Mascot from './Berry';
 import Lilith, { AISettings } from './Lilith';
 import Finance from './Finance';
 import { PartnerChat, Notes, Whiteboard, Games } from './CoupleFeatures';
-import { native } from './native';
+import { native, saveText } from './native';
 import AuthPanel from './AuthPanel';
 import HistoryPanel from './HistoryPanel';
 import IdeasPanel from './IdeasPanel';
@@ -24,7 +24,7 @@ const dateText = (s: string, options: Intl.DateTimeFormatOptions = { day: '2-dig
 const timeText = (s: string) => new Date(s).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 const categories: Record<string, string[]> = { task: ['Casa', 'Compras', 'Pessoal', 'Nós dois'], event: ['Encontro', 'Faculdade', 'Aniversário', 'Outro'], expense: ['Casa', 'Alimentação', 'Faculdade', 'Lazer', 'Transporte', 'Outros'] };
 function reminderPayload(state:State|null){if(!state)return [];const now=Date.now();return [...state.items.flatMap(i=>{const d=i.data;const date=d.kind==='event'?d.date:d.kind==='task'&&!d.done?d.due:null;return date?[{id:i.id,title:d.title,time:new Date(date).getTime()-15*60000}]:[];}),...upcomingMilestones(state.items).map(m=>({id:m.item.id,title:m.item.data.title,time:new Date(m.date.getFullYear(),m.date.getMonth(),m.date.getDate(),9).getTime()}))].filter(r=>r.time>now).slice(0,60);}
-function download(name: string, value: string, type = 'application/json') { const url = URL.createObjectURL(new Blob([value], { type })); const a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+function download(name:string,value:string,type='application/json'){saveText(name,value,type);}
 function Avatar({ name, index = 0, large = false }: {
     name: string;
     index?: number;
@@ -466,7 +466,7 @@ export default function Namora() {
         download('nossa-agenda.ics', `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Namora//Agenda//PT-BR\r\n${events.join('\r\n')}\r\nEND:VCALENDAR`, 'text/calendar');
     }
         useEffect(()=>{if(native()&&state&&!demo&&localStorage.getItem('namora.native.reminders')==='on')native()!.reminders(JSON.stringify(reminderPayload(state)));},[state,demo]);
-    useEffect(()=>{const onNative=(event:Event)=>{const d=(event as CustomEvent).detail;if(d?.image)setLilithOpen(true);if(d?.route){if(d.route==='lilith')setLilithOpen(true);else if(nav.some(n=>n.id===d.route)){setLilithOpen(false);setTab(d.route);}}};window.addEventListener('amora-native',onNative);const pending=(window as any).__amoraPending;if(pending)onNative(new CustomEvent('amora-native',{detail:pending}));return()=>window.removeEventListener('amora-native',onNative);},[]);
+    useEffect(()=>{const onNative=(event:Event)=>{const d=(event as CustomEvent).detail;if(d?.info)notify(d.info);if(d?.error)notify(d.error);if(d?.image)setLilithOpen(true);if(d?.route){if(d.route==='lilith')setLilithOpen(true);else if(nav.some(n=>n.id===d.route)){setLilithOpen(false);setTab(d.route);}}};window.addEventListener('amora-native',onNative);const pending=(window as any).__amoraPending;if(pending)onNative(new CustomEvent('amora-native',{detail:pending}));return()=>window.removeEventListener('amora-native',onNative);},[]);
     if(!booted) return <div className="loading"><Mascot/><h2>Abrindo nosso cantinho…</h2></div>;
     if(state&&((demo&&!explore)||(!demo&&!state.couple)))return <div className="onboarding"><div className="onboard-brand"><Mascot/><h1>amora<span>.</span></h1><p>Um espaço só de vocês dois.</p></div><div className="onboard-card">{demo?<AuthPanel recovery={recovering} onDone={()=>{setRecovering(false);void refresh(true);}} onNotify={notify}/>:<><span className="eyebrow">O COMEÇO DE NÓS</span><h2>Vamos criar o vínculo?</h2><p>Uma pessoa cria. A outra entra com o convite.</p><div className="segmented"><button className={linkMode==='create'?'active':''} onClick={()=>setLinkMode('create')}>Criar vínculo</button><button className={linkMode==='join'?'active':''} onClick={()=>setLinkMode('join')}>Tenho um convite</button></div><form className="form" onSubmit={link}><label>Seu nome<input name="name" required maxLength={50} defaultValue={state.user.displayName}/></label>{linkMode==='create'?<><label>Nome do nosso cantinho<input name="title" required maxLength={70} placeholder="Nosso cantinho"/></label><label>Juntos desde (opcional)<input type="date" name="since"/></label></>:<label>Código do seu amor<input name="code" required minLength={16} maxLength={20} placeholder="16 letras e números" autoCapitalize="characters"/></label>}{linkError&&<p className="form-error" role="alert">{linkError}</p>}<button className="button full" disabled={busy}>{busy?'Conectando…':linkMode==='create'?'Criar nosso vínculo':'Entrar no vínculo'}</button></form><button className="text-button" onClick={()=>void signOut()}>Trocar de conta</button></>}</div>{demo&&<button className="text-button explore-button" onClick={()=>setExplore(true)}>Conhecer com dados de exemplo</button>}{toast&&<div className="toast" role="status">{toast}</div>}</div>;
     if (!state)

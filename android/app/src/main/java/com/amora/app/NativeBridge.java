@@ -7,6 +7,7 @@ import android.speech.tts.*;
 import org.json.*;
 import java.util.*;
 public class NativeBridge {
+ static byte[] exportBytes;static String exportName,exportMime;
  final Context context;final WebView web;static TextToSpeech tts;static String pending="";static final Handler main=new Handler(Looper.getMainLooper());
  NativeBridge(Context c,WebView w){context=c;web=w;}
  static void event(String key,Object value){try{JSONObject d=new JSONObject().put(key,value);pending=d.toString();main.post(()->{if("speaking".equals(key))OverlayService.speaking(Boolean.TRUE.equals(value));for(WebView w:new ArrayList<>(AmoraWeb.views))flush(w);});}catch(Exception ignored){}}
@@ -15,6 +16,7 @@ public class NativeBridge {
  @JavascriptInterface public void overlay(boolean on){if(on)launch("amora.overlay");else context.stopService(new Intent(context,OverlayService.class));}
  @JavascriptInterface public void openApp(String route){if(!java.util.Arrays.asList("home","chat","expenses","games","paint","notes","agenda","history","ideas","lists","map").contains(route))return;main.post(()->{context.startActivity(new Intent(context,MainActivity.class).putExtra("route",route).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP));OverlayService.hidePanel();});}
  @JavascriptInterface public void closeOverlay(){main.post(()->OverlayService.hidePanel());}
+ @JavascriptInterface public void saveFile(String name,String mime,String content){if(content==null||content.length()>5000000||!Arrays.asList("text/csv","image/svg+xml","application/json","text/calendar").contains(mime))return;main.post(()->{exportBytes=content.getBytes(java.nio.charset.StandardCharsets.UTF_8);exportName=name.replaceAll("[^a-zA-Z0-9._-]","_");exportMime=mime;launch("amora.save");});}
  @JavascriptInterface public void capture(){launch("amora.capture");}
  @JavascriptInterface public void listen(){launch("amora.voice");}
  @JavascriptInterface public void stopAudio(){main.post(()->{if(tts!=null)tts.stop();event("speaking",false);});}

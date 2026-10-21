@@ -1,5 +1,5 @@
 import {getClient} from './supabase';
-export type NativeBridge={ overlay:(on:boolean)=>void; capture:()=>void; speak:(text:string)=>void; listen:()=>void; stopAudio:()=>void; reminders:(json:string)=>void; clearSession:()=>void; openApp:(route:string)=>void; closeOverlay:()=>void; };
+export type NativeBridge={ overlay:(on:boolean)=>void; capture:()=>void; speak:(text:string)=>void; listen:()=>void; stopAudio:()=>void; reminders:(json:string)=>void; clearSession:()=>void; openApp:(route:string)=>void; closeOverlay:()=>void; saveFile:(name:string,mime:string,content:string)=>void; };
 declare global { interface Window { AmoraAndroid?:NativeBridge } }
 export const native=()=>window.AmoraAndroid;
 export async function amoraCall(body:Record<string,unknown>){
@@ -9,3 +9,5 @@ export async function amoraCall(body:Record<string,unknown>){
  if(data?.error)throw Error(data.error);return data;
 }
 export function speak(text:string){if(native())native()!.speak(text);else if('speechSynthesis' in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='pt-BR';speechSynthesis.speak(u);}}
+
+export function saveText(name:string,value:string,type='application/json'){if(native()){native()!.saveFile(name,type,value);return;}const url=URL.createObjectURL(new Blob([value],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
