@@ -1,0 +1,14 @@
+plugins { id 'com.android.application' }
+android {
+ namespace 'com.amora.app'
+ compileSdk 35
+ defaultConfig {
+  applicationId 'com.amora.app'
+  minSdk 26
+  targetSdk 35
+  versionCode (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+  versionName '3.0.0'
+ }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ buildTypes { debug { debuggable true }; release { minifyEnabled false } }
+}

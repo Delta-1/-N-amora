@@ -1,0 +1,64 @@
+name: Amora Android APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install -g pnpm@11.25.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm build:pages
+      - run: pnpm test:pages && pnpm test:supabase && pnpm test:app
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: amora-personal-debug-keystore-v1
+      - name: Package compiled application
+        run: |
+          mkdir -p android/app/src/main/assets/web
+          cp -a docs/. android/app/src/main/assets/web/
+      - name: Build installable APK
+        run: gradle -p android assembleDebug --no-daemon
+      - name: Android emulator smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install android/app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -W -n com.amora.app/.MainActivity
+            adb shell input keyevent 82
+            python scripts/android-smoke.py
+      - name: Name APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Amora-Android.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Amora-Android
+          path: |
+            Amora-Android.apk
+            android-smoke.png
+          retention-days: 30
+      - name: Publish APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view android-latest || gh release create android-latest --title 'Amora Android' --notes 'APK de teste para uso pessoal do casal. Android 8 ou superior. Cada pessoa entra na própria conta e conecta o vínculo.'
+          gh release upload android-latest Amora-Android.apk --clobber

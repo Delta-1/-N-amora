@@ -1,76 +1,67 @@
-# (N)amora 💜
+# Amora · aplicativo do casal
 
-Nossa história, nossos planos e a vida a dois. **Versão 2: GitHub Pages + Supabase.**
+Versão 3 para Android e web, com backend Supabase WORKSPACE e vínculo exclusivo entre duas contas.
 
-## Novidades
+## Usar no celular
 
-- Transições direcionais entre abas, animação dos atalhos, botões e confirmações, mascote Lilith e corações nas memórias salvas. Respeita `prefers-reduced-motion`.
-- **História do casal**: data em que se conheceram, primeiro encontro, pedido de namoro, noivado, casamento e outras memórias. Texto, edição, aniversário anual, contagem regressiva e lembretes de hoje/amanhã com o app aberto.
-- **Potinho de ideias**: sugestões gratuitas por categoria, troca das sugestões, ideias salvas e agendamento de um encontro. IA personalizada paga marcada como etapa futura; não há cobrança nem ativação simulada.
-- Sons suaves opcionais nas abas, confirmações e lembretes, desligados por padrão.
-- Mapa Leaflet/OpenStreetMap com **os dois marcadores**, precisão, distância e status voluntários (estudando, trabalhando, a caminho…). O mapa de demonstração usa posições explicitamente fictícias.
-- Login e cadastro com e-mail/senha, recuperação de senha, convite de 16 caracteres para formar o casal, Supabase Realtime e fallback de atualização a cada 30 segundos.
-- Agenda, checklist, despesas individuais/compartilhadas, humor, temas, exportação JSON/ICS e aplicativo web instalável.
+1. Baixe **Amora-Android.apk** em **Releases → Amora Android**. A primeira compilação é criada pelo workflow **Amora Android APK**, na aba Actions. Android 8 ou superior.
+2. Instale e abra. Cada pessoa usa o próprio e-mail e senha. Confirme o e-mail se o projeto pedir.
+3. Uma pessoa escolhe **Criar vínculo**. A outra entra na própria conta, escolhe **Tenho um convite** e informa o código de 16 caracteres. O código dura 24 horas e só pode ser usado uma vez. Gere outro nas configurações se necessário.
+4. A navegação inferior reúne **Nosso canto, Conversa, Nosso bolso, Jogar e Juntos**. Agenda, história, combinados, ideias, mapa, quadros e notas ficam em Juntos e nos atalhos da página inicial.
+5. Os dados reais começam vazios. A demonstração é opcional e identificada. Os números da planilha fornecida não foram importados para contas reais.
 
-## Publicar no GitHub Pages
+## Lilith
 
-Os arquivos **já compilados estão em `docs/`**, com caminhos relativos. A entrada da raiz no GitHub Pages redireciona automaticamente para `docs/` quando o Pages estiver configurado para publicar a raiz; o build remove esse redirecionamento da versão compilada para evitar loops. A aplicação não faz chamadas para o servidor da versão anterior.
+Depois de os dois entrarem no vínculo, um parceiro abre **Configurações → Lilith · Gemini**, informa a chave do Google AI Studio e o modelo disponível nessa chave. O app verifica o modelo antes de guardar a chave. O padrão é `gemini-3.5-flash`; ele pode ser alterado. Nenhuma chave de IA está no código, no APK ou nas configurações públicas.
 
-1. No repositório, abra **Settings → Pages**.
-2. Em **Build and deployment → Source**, escolha **Deploy from a branch**.
-3. Selecione **main** e a pasta **/docs**, depois **Save**.
-4. Aguarde a publicação do Pages. O endereço publicado aparecerá nessa mesma tela.
+A chave do casal fica criptografada com AES-GCM no servidor. Somente a Edge Function acessa o texto descriptografado. Trocar a `SUPABASE_SERVICE_ROLE_KEY` exige recadastrar as chaves dos casais. O outro parceiro pode usar a Lilith, substituir ou remover a chave, sem visualizar a anterior.
 
-Não é necessário Node.js no servidor, Vercel ou Cloudflare Worker para a versão de Pages. O Supabase funciona como backend remoto. `docs/.nojekyll` evita processamento pelo Jekyll.
+A Lilith conversa, interpreta imagens, prepara tarefas, eventos, despesas, memórias, notas e planos financeiros, abre áreas do aplicativo, sugere mensagens ao parceiro e altera nome, humor, status e tema. Alterações aparecem em cartões com detalhes e botão **Aplicar no Amora**. Exclusões e envio ao parceiro têm confirmação adicional. A IA não compra, transfere dinheiro, controla outros aplicativos ou altera permissões do celular.
 
-Para atualizar os arquivos publicados depois de editar o código:
+**Planejar compra:** cadastrem renda, orçamento, dívidas e projetos. Peçam à Lilith um plano com objetivo, valor e prazo. O botão **Usar dados do casal** permite incluir registros financeiros e notas no pedido ao Google. Desligue para conversar sem esses dados. Imagens são enviadas somente ao apertar Enviar. O histórico da conversa da Lilith fica apenas na memória daquela janela, sem armazenamento remoto. Voz desligada por padrão; síntese de voz do Android/navegador e ditado do sistema, não Gemini Live.
+
+**Bolinha Android:** Configurações → Ativar bolinha da Lilith. Conceda a permissão de aparecer sobre outros apps. Uma notificação permite parar o serviço. A amorinha pode ser arrastada, abre um painel inferior e pulsa durante a fala. O atalho para o parceiro abre o aplicativo diretamente na conversa. O sistema operacional pode encerrar o serviço; abra o app e ative novamente.
+
+**Tela e seleção:** + → Capturar tela solicita o consentimento do Android em cada captura. É uma captura pontual, não transmissão contínua. Confira a imagem, circule uma região para formar o recorte e envie a pergunta. O Gemini interpreta texto e imagem da seleção; não há um serviço separado de OCR ou busca Google automática. Para nova tela, faça outra captura. No navegador que não permite captura, envie uma imagem pelo botão +. Telas protegidas podem ficar em branco.
+
+## Despesas com cara de planilha
+
+- **Lançamentos:** tabela editável com data, descrição, categoria, valor, pagador e divisão. Descrição e valor podem ser editados nas células; o lápis abre todos os campos. Exportação CSV.
+- **Rendas:** previsto e recebido por pessoa e mês.
+- **Orçamento:** limites previstos e realizado dos lançamentos da mesma categoria. Use uma linha por categoria para ler esse comparativo sem repetir o realizado.
+- **Dívidas:** saldo, parcela mensal, parcelas restantes, taxa informada e status.
+- **Projetos:** custo, valor guardado, aporte mensal, contribuições e data desejada. Mostra o prazo estimado e sugestão de divisão proporcional à renda informada (metade para cada um se ambas forem zero).
+
+Saldo realizado = renda recebida − lançamentos. Previsão livre = renda prevista − orçamento − parcelas − aportes. Não cadastre a mesma parcela/aporte novamente no orçamento. Projetos e dívidas são registros do mês selecionado; o app não lança pagamentos automaticamente nem calcula juros futuros. As projeções não incluem rendimentos. Valores monetários são armazenados em centavos.
+
+## Compartilhado
+
+- Chat de texto: mensagens persistidas no vínculo, com data e horário; ✓ significa salva no servidor, não confirmação de leitura. Sincroniza com a conversa aberta. Ainda não há push de novas mensagens com o app fechado.
+- Jogo da velha, xadrez e dama: cada pessoa joga no próprio aparelho. O servidor valida a vez, a jogada e a versão da partida. Xadrez inclui roque, en passant, promoção selecionável e empates com histórico PGN. Dama usa regras americanas, com captura obrigatória, peças comuns para frente e damas de passo curto.
+- Quadros: pontos vetoriais em SVG, cor e espessura, borracha por traço, desfazer próprio traço, exportar SVG e múltiplos quadros. O traço aparece para o parceiro ao soltar o dedo. Consulta paginada por quadro, com até 10.000 traços por quadro. Não há lousa por streaming de cada ponto.
+- Notas: edição compartilhada, com controle de versão para rejeitar sobrescrita de uma edição mais recente.
+- Datas, agenda, listas, humor, ideias e mapa anteriores preservados. GPS só enquanto o app estiver aberto e com consentimento individual; sem rastreamento contínuo de localização.
+- Lembretes Android: até 60 datas/eventos/tarefas sincronizados ficam agendados no aparelho. Abra o app para receber alterações do parceiro. Android pode atrasar alarmes inexatos por economia de bateria. Permissão de notificações é necessária. Na web, avisos dependem do app aberto.
+
+## Backend e desenvolvimento
+
+Projeto WORKSPACE: `qaiqflcxfxygynumapyp`. Instalação base: `supabase/namora-install.sql`. Extensão aditiva: `supabase/amora-app-upgrade.sql`. A Edge Function está em `supabase/functions/amora/`. As tabelas são `namora_*`; nenhum dado dos outros aplicativos é alterado.
+
+RLS verifica o vínculo em cada leitura/escrita. Chat não aceita remetente forjado. Quadros e traços precisam pertencer ao mesmo casal. Estados dos jogos e credenciais só podem ser escritos pela função autenticada. A função valida o usuário com Auth e limita requisições de Gemini por casal (12/minuto). A tabela de credenciais não tem políticas para clientes de propósito; o aviso informativo do advisor para essa tabela representa negação de acesso.
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm build:pages
-# commit e push de web/, public/, docs/ e dos demais arquivos alterados
-```
-
-`pnpm dev` inicia o Vite; o código da versão nova fica em **`web/`**. `app/`, `db/` e `worker/` mantêm a implementação anterior para referência/continuidade da antiga publicação. O build padrão e a pasta `docs/` usam somente `web/`.
-
-## Escolher e configurar o Supabase
-
-**Banco selecionado: WORKSPACE (`qaiqflcxfxygynumapyp`).** O aplicativo usa tabelas `namora_*`, regras RLS por casal e funções próprias no schema `namora_private`. A configuração pública já aponta para esse projeto. As tabelas dos outros aplicativos foram preservadas.
-
-A instalação no WORKSPACE já foi aplicada. Para reinstalar ou configurar outro ambiente:
-
-1. Execute **`supabase/namora-install.sql`** no SQL Editor desse projeto. O script cria apenas tabelas `namora_*` e o schema privado `namora_private`, sem modificar tabelas de outros aplicativos. É preferível usar um projeto separado; reaproveitar um projeto também compartilha autenticação e limites de recursos.
-2. Em **Authentication → URL Configuration**, inclua a URL exata publicada pelo Pages em Site URL/Redirect URLs para os e-mails de confirmação e recuperação. Não altere o Site URL de um projeto compartilhado sem avaliar os outros apps; nesse caso, preserve o existente e adicione apenas a URL do (N)amora à lista de redirects.
-3. Em **Authentication → Providers**, confira se e-mail/senha está habilitado. Respeite a configuração de confirmação por e-mail do projeto.
-4. Edite **`public/namora-config.json`** com `supabaseUrl` e **somente a chave publishable ou a antiga anon**. Compile novamente e envie `docs/` ao GitHub.
-
-A configuração é pública por design; as regras RLS e o JWT de cada usuário protegem os dados. Nunca publique `service_role`, `sb_secret_`, senha de banco ou chave de IA. Há uma tela de configuração local para testes; ela só salva URL e chave pública neste aparelho e não substitui a configuração publicada para o parceiro.
-
-Sem um banco configurado, o app abre em **demonstração identificada**, sem persistir dados reais ou criar contas. Contas reais não recebem os exemplos. Se já houver dados na publicação antiga, exporte-os antes de uma migração; esta etapa não copia nem apaga esses registros automaticamente.
-
-## Acesso do casal e dados
-
-Cada pessoa usa sua própria conta. Uma cria o vínculo e compartilha o código de 16 caracteres (24 horas de validade); a outra escolhe entrar no vínculo. O convite é armazenado como hash, consumido após o uso, e o vínculo aceita duas pessoas. Não há envio de convite por e-mail pelo app.
-
-Toda leitura é protegida por RLS. Escritas passam pelo RPC `namora_action`, que valida identidade, associação ao casal, valores e versão do registro. O código privilegiado fica no schema privado, com `search_path` fixo e execução somente por usuários autenticados. Nenhum usuário recebe permissão de escrita direta nas tabelas. Pedidos de vínculo inválidos contam para o limite de tentativas.
-
-## Localização, lembretes e IA
-
-- Cada pessoa compartilha **somente a própria posição**, com permissão do navegador. Pausar remove a posição. Posições sem atualização há mais de 15 minutos não são exibidas.
-- A atividade exibida é escolhida pela pessoa; não há inferência automática de trabalho, estudo ou deslocamento.
-- GPS e lembretes funcionam **com o app aberto**. GitHub Pages/PWA não oferece rastreamento contínuo equivalente ao Life360 com o aplicativo fechado. Isso exige uma etapa nativa ou infraestrutura adicional.
-- Sons são opt-in. O navegador pode suspender áudio e GPS com o app em segundo plano.
-- A Lilith oferece ajuda local. Geração personalizada por IA e acesso pago ficam para depois. Essa futura integração deverá usar **Supabase Edge Function**, chave secreta no servidor e validação de assinatura/limites no backend; esconder um botão no frontend não é controle de pagamento.
-
-## Verificação
-
-```sh
 pnpm exec tsc --noEmit
 pnpm build:pages
 pnpm test:pages
 pnpm test:supabase
+pnpm test:app
 ```
 
-Os testes verificam datas anuais (inclusive 29/02), distância, caminhos relativos e ausência de dependência do servidor anterior. O teste PostgreSQL/RLS usa **PGlite local**, aplica o script em banco temporário e verifica convites, isolamento entre casais, operações, despesas, memórias, ideias, localização e revogação de acesso. Não altera os projetos Supabase conectados.
+`web/` é a aplicação ativa; `docs/` é compilada para GitHub Pages. O Android empacota os mesmos arquivos localmente no APK, com ponte nativa Java para sobreposição, captura, voz e lembretes. O código anterior em `app/` e `worker/` permanece como referência.
 
-O schema, as regras de acesso e a publicação Realtime foram verificados no WORKSPACE. E-mails de confirmação/recuperação dependem da lista de Redirect URLs do projeto, que deve incluir o endereço final do Pages sem substituir as URLs dos outros aplicativos. A pasta `docs/` é o resultado do build; não edite seus arquivos gerados manualmente.
+## Compilação Android
+
+`.github/workflows/android.yml` compila o frontend, roda os testes, cria o APK, abre-o em emulador Android 15 e publica o download em Releases. O APK é **de teste**, assinado com chave debug. Não é uma publicação Play Store. Builds em máquinas/execuções diferentes podem usar chaves debug diferentes; para atualizações preservando instalação, configure uma chave de assinatura persistente antes de distribuir novas versões. Não publique chaves ou senhas no repositório.
+
+A validação em emulador cobre a abertura e a tela de conta. Sobreposição, síntese de voz, captura em outros aplicativos, autenticação real do casal e chamadas Gemini exigem teste no celular e uma chave válida. O sucesso do build não substitui esses testes.

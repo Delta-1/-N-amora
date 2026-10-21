@@ -45,3 +45,9 @@ yarn-error.log*
 .DS_Store
 
 /dist-pages/
+
+/android/.gradle/
+/android/app/build/
+/android/app/src/main/assets/web/
+/android/local.properties
+/android-smoke.png
