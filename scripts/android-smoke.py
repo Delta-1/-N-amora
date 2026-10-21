@@ -60,6 +60,20 @@ def evaluate(page, expression):
     subprocess.run(['node', 'scripts/android-eval.mjs', page, expression], check=True)
 
 
+def cancel_export():
+    # The first Back can dismiss the filename keyboard before the picker itself.
+    for _ in range(3):
+        shell('input', 'keyevent', 'KEYCODE_BACK')
+        time.sleep(1)
+        dump = shell('uiautomator', 'dump', '/sdcard/amora.xml')
+        if 'dumped' not in dump:
+            continue
+        xml = shell('cat', '/sdcard/amora.xml')
+        if 'documentsui' not in xml:
+            return
+    raise AssertionError('Android document picker did not close')
+
+
 try:
     wait_ui(lambda x: 'Criar conta' in x and ('E-mail' in x or 'Senha' in x),
             'APK renders account onboarding')
@@ -72,35 +86,44 @@ try:
     x1, y1, x2, y2 = wait_bubble()
     screenshot('bubble')
     shell('input', 'tap', str((x1 + x2) // 2), str((y1 + y2) // 2))
-    wait_ui(lambda x: 'Abrir Amora' in x and 'Recolher' in x,
+    wait_ui(lambda x: 'abrir amora' in x.casefold() and 'recolher' in x.casefold(),
             'bubble opens the floating Lilith panel above the launcher')
     screenshot('panel')
-    xml = wait_ui(lambda x: 'Recolher' in x, 'floating panel is interactive')
-    click_ui(xml, lambda n: n.get('text') == 'Recolher')
+    xml = wait_ui(lambda x: 'recolher' in x.casefold(), 'floating panel is interactive')
+    click_ui(xml, lambda n: n.get('text', '').casefold() == 'recolher')
     x1, y1, x2, y2 = wait_bubble()
     shell('input', 'tap', str((x1 + x2) // 2), str((y1 + y2) // 2))
-    wait_ui(lambda x: 'Recolher' in x, 'floating panel reopens after minimizing')
+    wait_ui(lambda x: 'recolher' in x.casefold(), 'floating panel reopens after minimizing')
 
     # Drive the same bridge used by CSV/SVG export, then interact with Android's picker.
     shell('rm', '-f', '/sdcard/Download/amora-smoke.csv')
     evaluate('overlay', "window.AmoraAndroid.saveFile('amora-smoke.csv','text/csv','descrição;valor\\nTeste;12,34\\n')")
-    xml = wait_ui(lambda x: 'amora-smoke.csv' in x and 'Recolher' not in x,
+    xml = wait_ui(lambda x: 'amora-smoke.csv' in x and 'recolher' not in x.casefold(),
                   'document picker replaces overlay without being covered')
     screenshot('save-picker')
     click_ui(xml, lambda n: n.get('text', '').upper() in ('SAVE', 'SALVAR') and n.get('enabled') == 'true')
-    wait_ui(lambda x: 'Recolher' in x, 'saving returns to the floating panel')
+    wait_ui(lambda x: 'recolher' in x.casefold(), 'saving returns to the floating panel')
     assert shell('cat', '/sdcard/Download/amora-smoke.csv') == 'descrição;valor\nTeste;12,34\n'
     print('PASS: exported CSV is saved with exact UTF-8 contents', flush=True)
 
     evaluate('overlay', "window.AmoraAndroid.saveFile('amora-cancel.svg','image/svg+xml','<svg xmlns=\"http://www.w3.org/2000/svg\"/>')")
     wait_ui(lambda x: 'amora-cancel.svg' in x, 'SVG export opens Android document picker')
-    shell('input', 'keyevent', 'KEYCODE_BACK')
-    wait_ui(lambda x: 'Recolher' in x, 'canceling export returns to the floating panel')
+    cancel_export()
+    wait_ui(lambda x: 'recolher' in x.casefold(), 'canceling export returns to the floating panel')
     evaluate('overlay', "window.AmoraAndroid.saveFile('amora-retry.csv','text/csv','ok')")
     wait_ui(lambda x: 'amora-retry.csv' in x, 'export works again after cancellation')
-    shell('input', 'keyevent', 'KEYCODE_BACK')
-    wait_ui(lambda x: 'Recolher' in x, 'retry cancellation keeps panel usable')
+    cancel_export()
+    wait_ui(lambda x: 'recolher' in x.casefold(), 'retry cancellation keeps panel usable')
     screenshot('export-complete')
+    xml = wait_ui(lambda x: 'recolher' in x.casefold(), 'panel remains usable after exports')
+    click_ui(xml, lambda n: n.get('text', '').casefold() == 'abrir amora')
+    wait_ui(lambda x: 'Criar conta' in x and 'recolher' not in x.casefold(), 'toolbar returns to the main app')
+    evaluate('main', "window.AmoraAndroid.saveFile('amora-main.csv','text/csv','ok')")
+    wait_ui(lambda x: 'amora-main.csv' in x, 'export also opens from the main app')
+    cancel_export()
+    wait_ui(lambda x: 'Criar conta' in x and 'recolher' not in x.casefold(),
+            'main-app export does not force the user into the floating panel')
+    screenshot('main-export-complete')
 finally:
     screenshot('final')
     for name, args in {
