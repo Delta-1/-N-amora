@@ -39,17 +39,6 @@ jobs:
           cp -a docs/. android/app/src/main/assets/web/
       - name: Build installable APK
         run: gradle -p android assembleDebug --no-daemon
-      - name: Android emulator smoke test
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          arch: x86_64
-          disable-animations: true
-          script: |
-            adb install android/app/build/outputs/apk/debug/app-debug.apk
-            adb shell am start -W -n com.amora.app/.MainActivity
-            adb shell input keyevent 82
-            python scripts/android-smoke.py
       - name: Name APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk Amora-Android.apk
       - uses: actions/upload-artifact@v4
@@ -57,7 +46,6 @@ jobs:
           name: Amora-Android
           path: |
             Amora-Android.apk
-            android-smoke.png
           retention-days: 30
       - name: Publish APK download
         env:
@@ -65,3 +53,40 @@ jobs:
         run: |
           gh release view android-latest || gh release create android-latest --title 'Amora Android' --notes 'APK de teste para uso pessoal do casal. Android 8 ou superior. Cada pessoa entra na própria conta e conecta o vínculo.'
           gh release upload android-latest Amora-Android.apk --clobber
+
+  android-smoke:
+    needs: apk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: Amora-Android
+      - name: Prepare emulator acceleration
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Verify floating assistant on Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install Amora-Android.apk
+            adb shell am start -W -n com.amora.app/.MainActivity
+            adb shell input keyevent 82
+            python scripts/android-smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Amora-Android-test
+          path: android-smoke.png
+          if-no-files-found: ignore

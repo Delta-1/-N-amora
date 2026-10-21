@@ -350,9 +350,9 @@ export default function Namora() {
     } return !!result; }
     async function deleteShared(item: Item) { if (window.confirm(`Excluir “${item.data.title}” do vínculo?`))
         await run({ action: 'delete', id: item.id, version: item.version }, 'Memória removida'); }
-    async function signOut() { native()?.clearSession();setExplore(false); if (watch.current !== null)
+    async function signOut() { setExplore(false); if (watch.current !== null)
         navigator.geolocation.clearWatch(watch.current); if (sharing)
-        await backendAction({ action: 'location', enabled: false }).catch(() => { }); setSharing(false); await getClient()?.auth.signOut(); setCode('');  setModal(null); await refresh(true); }
+        await backendAction({ action: 'location', enabled: false }).catch(() => { }); setSharing(false); await getClient()?.auth.signOut({scope:'local'}); native()?.clearSession();setCode('');  setModal(null); await refresh(true); }
     async function remove() {
         if (!editing)
             return;

@@ -62,6 +62,6 @@ pnpm test:app
 
 ## Compilação Android
 
-`.github/workflows/android.yml` compila o frontend, roda os testes, cria o APK, abre-o em emulador Android 15 e publica o download em Releases. O APK é **de teste**, assinado com chave debug. Não é uma publicação Play Store. Builds em máquinas/execuções diferentes podem usar chaves debug diferentes; para atualizações preservando instalação, configure uma chave de assinatura persistente antes de distribuir novas versões. Não publique chaves ou senhas no repositório.
+`.github/workflows/android.yml` compila o frontend, roda os testes, cria o APK e publica o download em Releases. Um job separado tenta verificar a abertura e a bolinha sobre a tela inicial em emulador Android 15. Confira o resultado desse job: falhas da infraestrutura do emulador não representam validação do aplicativo. O APK é **de teste**, assinado com chave debug. Não é uma publicação Play Store. Builds em máquinas/execuções diferentes podem usar chaves debug diferentes; para atualizações preservando instalação, configure uma chave de assinatura persistente antes de distribuir novas versões. Não publique chaves ou senhas no repositório.
 
 A validação em emulador cobre a abertura e a tela de conta. Sobreposição, síntese de voz, captura em outros aplicativos, autenticação real do casal e chamadas Gemini exigem teste no celular e uma chave válida. O sucesso do build não substitui esses testes.
