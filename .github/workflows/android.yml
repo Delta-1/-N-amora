@@ -88,5 +88,8 @@ jobs:
         if: always()
         with:
           name: Amora-Android-test
-          path: android-smoke.png
+          path: |
+            android-smoke*.png
+            android-smoke*.txt
+            android-smoke*.xml
           if-no-files-found: ignore
