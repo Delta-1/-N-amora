@@ -1,5 +1,6 @@
 """Exercise the packaged app and its real Android overlay above the launcher."""
 import re
+import xml.etree.ElementTree as ET
 import subprocess
 import time
 from pathlib import Path
@@ -47,6 +48,18 @@ def wait_bubble():
     raise AssertionError('Lilith bubble has no visible Android overlay surface')
 
 
+def click_ui(xml, predicate):
+    node = next(n for n in ET.fromstring(xml).iter('node') if predicate(n))
+    x1, y1, x2, y2 = map(int, re.findall(r'\d+', node.get('bounds')))
+    shell('input', 'tap', str((x1 + x2) // 2), str((y1 + y2) // 2))
+
+
+def evaluate(page, expression):
+    pid = shell('pidof', 'com.amora.app').strip().split()[0]
+    subprocess.run(['adb', 'forward', 'tcp:9223', f'localabstract:webview_devtools_remote_{pid}'], check=True)
+    subprocess.run(['node', 'scripts/android-eval.mjs', page, expression], check=True)
+
+
 try:
     wait_ui(lambda x: 'Criar conta' in x and ('E-mail' in x or 'Senha' in x),
             'APK renders account onboarding')
@@ -62,6 +75,32 @@ try:
     wait_ui(lambda x: 'Abrir Amora' in x and 'Recolher' in x,
             'bubble opens the floating Lilith panel above the launcher')
     screenshot('panel')
+    xml = wait_ui(lambda x: 'Recolher' in x, 'floating panel is interactive')
+    click_ui(xml, lambda n: n.get('text') == 'Recolher')
+    x1, y1, x2, y2 = wait_bubble()
+    shell('input', 'tap', str((x1 + x2) // 2), str((y1 + y2) // 2))
+    wait_ui(lambda x: 'Recolher' in x, 'floating panel reopens after minimizing')
+
+    # Drive the same bridge used by CSV/SVG export, then interact with Android's picker.
+    shell('rm', '-f', '/sdcard/Download/amora-smoke.csv')
+    evaluate('overlay', "window.AmoraAndroid.saveFile('amora-smoke.csv','text/csv','descrição;valor\\nTeste;12,34\\n')")
+    xml = wait_ui(lambda x: 'amora-smoke.csv' in x and 'Recolher' not in x,
+                  'document picker replaces overlay without being covered')
+    screenshot('save-picker')
+    click_ui(xml, lambda n: n.get('text', '').upper() in ('SAVE', 'SALVAR') and n.get('enabled') == 'true')
+    wait_ui(lambda x: 'Recolher' in x, 'saving returns to the floating panel')
+    assert shell('cat', '/sdcard/Download/amora-smoke.csv') == 'descrição;valor\nTeste;12,34\n'
+    print('PASS: exported CSV is saved with exact UTF-8 contents', flush=True)
+
+    evaluate('overlay', "window.AmoraAndroid.saveFile('amora-cancel.svg','image/svg+xml','<svg xmlns=\"http://www.w3.org/2000/svg\"/>')")
+    wait_ui(lambda x: 'amora-cancel.svg' in x, 'SVG export opens Android document picker')
+    shell('input', 'keyevent', 'KEYCODE_BACK')
+    wait_ui(lambda x: 'Recolher' in x, 'canceling export returns to the floating panel')
+    evaluate('overlay', "window.AmoraAndroid.saveFile('amora-retry.csv','text/csv','ok')")
+    wait_ui(lambda x: 'amora-retry.csv' in x, 'export works again after cancellation')
+    shell('input', 'keyevent', 'KEYCODE_BACK')
+    wait_ui(lambda x: 'Recolher' in x, 'retry cancellation keeps panel usable')
+    screenshot('export-complete')
 finally:
     screenshot('final')
     for name, args in {

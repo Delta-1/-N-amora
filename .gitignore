@@ -1,5 +1,5 @@
 # Dependencies
-/node_modules/
+/node_modules
 /.pnp
 .pnp.*
 # Keep authored Yarn tooling if the project adopts Yarn.
@@ -51,3 +51,8 @@ yarn-error.log*
 /android/app/src/main/assets/web/
 /android/local.properties
 /android-smoke.png
+
+/android-smoke-*.png
+/android-smoke-*.txt
+/android-smoke-*.xml
+**/__pycache__/

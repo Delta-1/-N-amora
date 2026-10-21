@@ -20,13 +20,13 @@ A Lilith conversa, interpreta imagens, prepara tarefas, eventos, despesas, memó
 
 **Planejar compra:** cadastrem renda, orçamento, dívidas e projetos. Peçam à Lilith um plano com objetivo, valor e prazo. O botão **Usar dados do casal** permite incluir registros financeiros e notas no pedido ao Google. Desligue para conversar sem esses dados. Imagens são enviadas somente ao apertar Enviar. O histórico da conversa da Lilith fica apenas na memória daquela janela, sem armazenamento remoto. Voz desligada por padrão; síntese de voz do Android/navegador e ditado do sistema, não Gemini Live.
 
-**Bolinha Android:** Configurações → Ativar bolinha da Lilith. Conceda a permissão de aparecer sobre outros apps. Uma notificação permite parar o serviço. A amorinha pode ser arrastada, abre um painel inferior e pulsa durante a fala. O atalho para o parceiro abre o aplicativo diretamente na conversa. O sistema operacional pode encerrar o serviço; abra o app e ative novamente.
+**Bolinha Android:** Configurações → Ativar bolinha da Lilith. Conceda a permissão de aparecer sobre outros apps. Uma notificação permite parar o serviço. A amorinha pode ser arrastada, abre um painel inferior e pulsa durante a fala. O atalho para o parceiro abre o aplicativo diretamente na conversa. O sistema operacional pode encerrar o serviço; abra o app e ative novamente. Ao abrir o seletor de arquivo, salvar uma exportação ou usar o ditado, o painel é recolhido para liberar a tela do Android. Quando a ação parte da bolinha, o painel volta ao terminar ou cancelar o seletor/ditado. Ações iniciadas dentro do app mantêm o app aberto.
 
 **Tela e seleção:** + → Capturar tela solicita o consentimento do Android em cada captura. É uma captura pontual, não transmissão contínua. Confira a imagem, circule uma região para formar o recorte e envie a pergunta. O Gemini interpreta texto e imagem da seleção; não há um serviço separado de OCR ou busca Google automática. Para nova tela, faça outra captura. No navegador que não permite captura, envie uma imagem pelo botão +. Telas protegidas podem ficar em branco.
 
 ## Despesas com cara de planilha
 
-- **Lançamentos:** tabela editável com data, descrição, categoria, valor, pagador e divisão. Descrição e valor podem ser editados nas células; o lápis abre todos os campos. Exportação CSV.
+- **Lançamentos:** tabela editável com data, descrição, categoria, valor, pagador e divisão. Descrição e valor podem ser editados nas células; o lápis abre todos os campos. Exportação CSV; no Android, escolha a pasta no seletor do sistema. Os quadros também usam esse seletor para exportar SVG.
 - **Rendas:** previsto e recebido por pessoa e mês.
 - **Orçamento:** limites previstos e realizado dos lançamentos da mesma categoria. Use uma linha por categoria para ler esse comparativo sem repetir o realizado.
 - **Dívidas:** saldo, parcela mensal, parcelas restantes, taxa informada e status.
