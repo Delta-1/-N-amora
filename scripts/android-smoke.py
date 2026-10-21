@@ -91,6 +91,7 @@ try:
     screenshot('panel')
     xml = wait_ui(lambda x: 'recolher' in x.casefold(), 'floating panel is interactive')
     click_ui(xml, lambda n: n.get('text', '').casefold() == 'recolher')
+    wait_ui(lambda x: 'recolher' not in x.casefold(), 'minimizing releases the panel window')
     x1, y1, x2, y2 = wait_bubble()
     shell('input', 'tap', str((x1 + x2) // 2), str((y1 + y2) // 2))
     wait_ui(lambda x: 'recolher' in x.casefold(), 'floating panel reopens after minimizing')
