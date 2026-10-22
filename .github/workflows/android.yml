@@ -2,6 +2,8 @@ name: Amora Android APK
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: write
@@ -48,6 +50,7 @@ jobs:
             Amora-Android.apk
           retention-days: 30
       - name: Publish APK download
+        if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
