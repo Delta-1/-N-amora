@@ -1,7 +1,7 @@
 export const appIds=['home','chat','expenses','album','camera','files','games','paint','notes','agenda','history','lists','ideas','map','lilith'] as const;
 export type AppId=typeof appIds[number];
 export type AppPreferences={dock:AppId[];order:AppId[];hidden:AppId[];overlay:string[]};
-export const defaults:AppPreferences={dock:['home','chat','expenses','album'],order:[...appIds],hidden:[],overlay:['lilith','chat','apps']};
+export const defaults:AppPreferences={dock:['home','chat','expenses','camera'],order:[...appIds],hidden:[],overlay:['lilith','chat','apps']};
 export function cleanPreferences(input:any):AppPreferences{const valid=(v:any):AppId[]=>Array.isArray(v)?[...new Set(v.filter((x:any)=>appIds.includes(x)))]:[];const dock=[...valid(input?.dock),...defaults.dock].filter((v,i,a)=>a.indexOf(v)===i).slice(0,4);return{dock,order:[...valid(input?.order),...appIds].filter((v,i,a)=>a.indexOf(v)===i),hidden:valid(input?.hidden).filter(v=>!dock.includes(v)),overlay:[...new Set<string>((Array.isArray(input?.overlay)?input.overlay:defaults.overlay).filter((x:string)=>['lilith','chat','apps','camera'].includes(x)))].slice(0,4)};}
 export type Appearance='light'|'dark'|'system';
 export function applyAppearance(value:Appearance){const dark=value==='dark'||value==='system'&&matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=dark?'kuromi-dark':'kuromi-light';document.documentElement.style.colorScheme=dark?'dark':'light';document.querySelector('meta[name="theme-color"]')?.setAttribute('content',dark?'#17121f':'#f6f1fc');}

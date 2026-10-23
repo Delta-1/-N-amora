@@ -125,6 +125,34 @@ try:
     wait_ui(lambda x: 'Criar conta' in x and 'recolher' not in x.casefold(),
             'main-app export does not force the user into the floating panel')
     screenshot('main-export-complete')
+    # Exercise the actual app drawer and map without requiring account credentials.
+    evaluate('main', "document.querySelector('.explore-button').click()")
+    wait_ui(lambda x: 'Nosso canto' in x and 'Apps' in x, 'demo enters the complete mobile shell')
+    evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
+    xml = wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'Apps drawer opens all routes')
+    click_ui(xml, lambda n: n.get('text', '') == 'Mapa')
+    wait_ui(lambda x: 'Nosso GPS' in x and 'Aguardando' in x, 'map opens before any GPS position is available')
+    screenshot('map')
+    evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Câmera').click()")
+    wait_ui(lambda x: 'Personalizar foto' in x and 'Tirar foto' in x, 'camera opens directly from bottom navigation')
+    evaluate('main', "(()=>{const b=document.querySelector('.camera-controls').getBoundingClientRect();if(b.bottom>innerHeight-60||b.top<0)throw Error('Camera controls require scrolling');return 'Camera controls fit the viewport';})()")
+    screenshot('camera')
+    evaluate('main', "document.querySelector('[aria-label=\"Personalizar foto\"]').click()")
+    wait_ui(lambda x: 'Marca na foto' in x and 'Salvar também no celular' in x, 'camera customization opens without scrolling the camera')
+    evaluate('main', "document.querySelector('[aria-label=\"Fechar personalização\"]').click()")
+    evaluate('main', "(()=>{const c=document.createElement('canvas');c.width=100;c.height=100;const x=c.getContext('2d');x.fillStyle='#c3a2ff';x.fillRect(0,0,100,100);window.AmoraAndroid.savePhoto('namora-smoke-photo.jpg',c.toDataURL('image/jpeg').split(',')[1],'Foto de teste do Amora');})()")
+    wait_ui(lambda x: 'Foto salva na galeria' in x, 'native camera output saves automatically to MediaStore gallery')
+    photos=shell('content','query','--uri','content://media/external/images/media','--projection','_display_name:relative_path')
+    assert 'namora-smoke-photo.jpg' in photos and 'Pictures/NAMORA' in photos
+    print('PASS: captured JPEG exists in gallery Pictures/NAMORA',flush=True)
+    for label, title in [('Conversa','Seu amor, logo aqui.'),('Nosso bolso','Dividir também é cuidar.'),('Jogos','Um tempinho para brincar.'),('Desenho','Memórias em cada traço.'),('Notas','O que a gente imagina junto.'),('Agenda','Tempo para o que importa.'),('Nossa história','Os dias que viraram nós.'),('Combinados','Pequenos planos, juntos.'),('Ideias','Boas ideias, lindas memórias.'),('Arquivos','Nossos arquivos'),('Álbum','Nossas lembranças')]:
+        evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
+        wait_ui(lambda x: 'Aplicativos' in x and 'Organizar' in x, 'drawer is ready for '+label)
+        import json
+        evaluate('main', "Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==="+json.dumps(label)+").click()")
+        wait_ui(lambda x: title in x, 'menu opens '+label)
+
+
 finally:
     screenshot('final')
     for name, args in {

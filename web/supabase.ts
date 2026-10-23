@@ -6,6 +6,8 @@ export type BackendConfig = {
     aiFunctionName?: string;
 };
 let client: SupabaseClient | null = null;
+let activeConfig:BackendConfig|null=null;
+export const getBackendConfig=()=>activeConfig;
 let initialization: Promise<SupabaseClient | null> | null = null;
 export const asset = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
 export function getClient() { return client; }
@@ -48,9 +50,11 @@ async function loadBackend() {
     }
     if (!config?.supabaseUrl || !config.supabasePublishableKey)
         return null;
-    const clean = validateConfig(config);
+    const clean = validateConfig(config);activeConfig=clean;
     const { createClient } = await import('@supabase/supabase-js');
-    client = createClient(clean.supabaseUrl, clean.supabasePublishableKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'namora.auth.v1' } });
+    client = createClient(clean.supabaseUrl, clean.supabasePublishableKey, { auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: true, storageKey: 'namora.auth.v1' } });
+    const restoreNative=async()=>{try{const n=JSON.parse(window.AmoraAndroid?.trackingSession?.()||'null'),saved=JSON.parse(localStorage.getItem('namora.auth.v1')||'null');if(n?.access&&n.user===saved?.user?.id&&n.expires>(saved?.expires_at||0))await client!.auth.setSession({access_token:n.access,refresh_token:n.refresh});}catch{}};await restoreNative();if(!document.hidden)client.auth.startAutoRefresh();document.addEventListener('visibilitychange',()=>{if(document.hidden)client?.auth.stopAutoRefresh();else void restoreNative().finally(()=>client?.auth.startAutoRefresh());});window.addEventListener('amora-native',e=>{if((e as CustomEvent).detail?.trackingSessionUpdated)void restoreNative();});
+    client.auth.onAuthStateChange((_event,session)=>{if(session)queueMicrotask(()=>window.AmoraAndroid?.configureTracking?.(JSON.stringify({access:session.access_token,refresh:session.refresh_token,expires:session.expires_at,user:session.user.id,key:clean.supabasePublishableKey})));});
     return client;
 }
 export async function configureBackend(config: BackendConfig) { const clean = validateConfig(config); localStorage.setItem('namora.backend.v1', JSON.stringify(clean)); location.reload(); }

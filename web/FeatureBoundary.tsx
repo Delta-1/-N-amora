@@ -1,0 +1,2 @@
+import {Component,type ReactNode} from 'react';
+export default class FeatureBoundary extends Component<{children:ReactNode;onRecover:()=>void},{error:boolean}>{state={error:false};static getDerivedStateFromError(){return{error:true};}render(){return this.state.error?<section className="empty" role="alert"><h3>Vamos abrir de novo?</h3><p>Esta área não carregou corretamente. Seus dados continuam guardados.</p><button className="button" onClick={this.props.onRecover}>Voltar aos aplicativos</button></section>:this.props.children;}}
