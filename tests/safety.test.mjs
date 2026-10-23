@@ -1,0 +1,27 @@
+import {PGlite} from '@electric-sql/pglite';import fs from 'node:fs/promises';import assert from 'node:assert/strict';
+const db=new PGlite();let checks=0;const ok=(v,msg)=>{assert.ok(v,msg);checks++;console.log('PASS',msg);};
+const a='30000000-0000-4000-8000-000000000001',b='30000000-0000-4000-8000-000000000002',m='30000000-0000-4000-8000-000000000003';
+try{
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create function auth.jwt() returns jsonb language sql stable as $$select '{}'::jsonb$$;grant usage on schema auth to authenticated;`);
+ await db.exec(await fs.readFile('supabase/namora-install.sql','utf8'));const sql=await fs.readFile('supabase/amora-safety-upgrade.sql','utf8');await db.exec(sql);await db.exec(sql);ok(true,'safety upgrade is additive and repeatable');
+ await db.query('insert into auth.users values($1),($2),($3)',[a,b,m]);
+ const as=async uid=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid]);await db.exec('set role authenticated');};
+ const action=async p=>(await db.query('select namora_action($1::jsonb) v',[JSON.stringify(p)])).rows[0].v;
+ const track=async(p={})=>(await db.query('select namora_track($1::jsonb) v',[JSON.stringify(p)])).rows[0].v;
+ await as(a);const link=await action({action:'create',name:'A',title:'Couple'});await as(b);await action({action:'join',name:'B',code:link.code});
+ await assert.rejects(()=>track({action:'location',latitude:0,longitude:0,accuracy:10}));await assert.rejects(()=>track({action:'steps',day:'2026-10-22',steps:100}));ok(true,'location and steps require individual opt-in');
+ await as(a);await track({action:'place',name:'Academia',latitude:0,longitude:0,radius:150});const place=(await track()).places[0];ok(!!place.id,'partner can create a shared place');
+ await track({action:'consent',enabled:true,steps_enabled:true});await track({action:'location',latitude:0,longitude:0,accuracy:180});ok((await track()).events.length===0,'poor GPS accuracy does not create false arrival');
+ await track({action:'location',latitude:0,longitude:0,accuracy:12.8});ok((await track()).events.length===1,'arrival generated for accurate fix inside radius including decimal accuracy');await track({action:'location',latitude:0,longitude:0,accuracy:10});ok((await track()).events.length===1,'remaining inside does not repeatedly notify');
+ await track({action:'location',latitude:.0015,longitude:0,accuracy:30});ok((await track()).events.length===1,'GPS jitter near the boundary does not trigger repeat arrival');
+ await track({action:'location',latitude:.01,longitude:0,accuracy:10});await track({action:'location',latitude:0,longitude:0,accuracy:10});ok((await track()).events.length===1,'rapid exit and reentry respects arrival cooldown');
+ const day=new Date().toISOString().slice(0,10),month=day.slice(0,7);await track({action:'steps',day,steps:321});await track({action:'steps',day,steps:100});ok((await track({month})).steps[0].steps===321,'retry or older offline upload cannot reduce daily total');await assert.rejects(()=>track({action:'steps',day,steps:-1}));await assert.rejects(()=>track({action:'steps',day:'2100-01-01',steps:1}));ok(true,'invalid counts and future dates are rejected');
+ await track({action:'sos'});await assert.rejects(()=>track({action:'sos'}));ok(true,'SOS is rate limited');
+ const compact=await track({lite:true,since:0});ok(!('places' in compact)&&!('steps' in compact)&&compact.events.length===2,'background response omits full places and step history');ok((await track({lite:true,since:compact.events.at(-1).id})).events.length===0,'background cursor does not redownload delivered events');
+ await as(b);let snapshot=await track({month});ok(snapshot.events.length===2&&snapshot.steps[0].steps===321,'partner sees arrival, SOS and monthly steps');ok(!snapshot.enabled,'partner cannot activate the other account by sharing a place');
+ await assert.rejects(()=>db.query("update namora_tracking set enabled=true"));await assert.rejects(()=>db.query("insert into namora_safety_events(couple_id,user_id,kind,body) values(gen_random_uuid(),$1,'sos','fake')",[a]));ok(true,'clients cannot forge safety events or modify consent tables directly');
+ await as(m);await action({action:'create',name:'M',title:'Other'});snapshot=await track();ok(snapshot.places.length===0&&snapshot.events.length===0&&snapshot.steps.length===0,'another couple cannot read places, SOS or step totals');await track({action:'delete-place',id:place.id});await as(a);ok((await track()).places.length===1,'another couple cannot delete known place ID');
+ await track({action:'consent',enabled:false,steps_enabled:false});ok((await db.query('select * from namora_locations')).rows.length===0,'pause removes current position');await assert.rejects(()=>track({action:'location',latitude:0,longitude:0,accuracy:10}));ok(true,'pause prevents subsequent background uploads');
+ await as(b);await action({action:'leave'});await assert.rejects(()=>track());ok(true,'leaving revokes RPC access');await db.exec('reset role;set role anon');await assert.rejects(()=>track());ok(true,'anonymous users cannot call safety RPC');
+ console.log(checks+' safety database checks passed');
+}finally{await db.close();}
