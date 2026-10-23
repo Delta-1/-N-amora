@@ -19,7 +19,10 @@ def screenshot(name):
 def wait_ui(predicate, label):
     for _ in range(15):
         time.sleep(2)
-        dump = shell('uiautomator', 'dump', '/sdcard/amora.xml')
+        try:
+            dump = shell('uiautomator', 'dump', '/sdcard/amora.xml')
+        except subprocess.CalledProcessError:
+            continue  # UiAutomation can be killed while the emulator finishes booting.
         if 'UI hierchary dumped' not in dump and 'UI hierarchy dumped' not in dump:
             continue  # Android may still be relaunching the WebView window.
         result = subprocess.run(['adb', 'shell', 'cat', '/sdcard/amora.xml'],
@@ -65,7 +68,10 @@ def cancel_export():
     for _ in range(3):
         shell('input', 'keyevent', 'KEYCODE_BACK')
         time.sleep(1)
-        dump = shell('uiautomator', 'dump', '/sdcard/amora.xml')
+        try:
+            dump = shell('uiautomator', 'dump', '/sdcard/amora.xml')
+        except subprocess.CalledProcessError:
+            continue  # UiAutomation can be killed while the emulator finishes booting.
         if 'dumped' not in dump:
             continue
         xml = shell('cat', '/sdcard/amora.xml')
