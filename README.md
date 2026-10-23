@@ -1,13 +1,13 @@
 # Amora · aplicativo do casal
 
-Versão 3 para Android e web, com backend Supabase WORKSPACE e vínculo exclusivo entre duas contas.
+Versão 3.1 para Android e web, com backend Supabase WORKSPACE e vínculo exclusivo entre duas contas.
 
 ## Usar no celular
 
 1. Baixe **Amora-Android.apk** em **Releases → Amora Android**. A primeira compilação é criada pelo workflow **Amora Android APK**, na aba Actions. Android 8 ou superior.
 2. Instale e abra. Cada pessoa usa o próprio e-mail e senha. Confirme o e-mail se o projeto pedir.
 3. Uma pessoa escolhe **Criar vínculo**. A outra entra na própria conta, escolhe **Tenho um convite** e informa o código de 16 caracteres. O código dura 24 horas e só pode ser usado uma vez. Gere outro nas configurações se necessário.
-4. A navegação inferior reúne **Nosso canto, Conversa, Nosso bolso, Jogar e Juntos**. Agenda, história, combinados, ideias, mapa, quadros e notas ficam em Juntos e nos atalhos da página inicial.
+4. A navegação inferior tem quatro favoritos configuráveis e **Apps** no centro. A gaveta animada reúne câmera, álbum, arquivos, jogos, agenda, história, combinados, ideias, mapa, quadros, notas e Lilith. Em **Configurações → Meu app**, escolha os favoritos, os atalhos da bolinha e o tema claro, escuro ou automático. Em Apps → Organizar, altere a ordem e oculte atalhos.
 5. Os dados reais começam vazios. A demonstração é opcional e identificada. Os números da planilha fornecida não foram importados para contas reais.
 
 ## Lilith
@@ -18,7 +18,7 @@ A chave do casal fica criptografada com AES-GCM no servidor. Somente a Edge Func
 
 A Lilith conversa, interpreta imagens, prepara tarefas, eventos, despesas, memórias, notas e planos financeiros, abre áreas do aplicativo, sugere mensagens ao parceiro e altera nome, humor, status e tema. Alterações aparecem em cartões com detalhes e botão **Aplicar no Amora**. Exclusões e envio ao parceiro têm confirmação adicional. A IA não compra, transfere dinheiro, controla outros aplicativos ou altera permissões do celular.
 
-**Planejar compra:** cadastrem renda, orçamento, dívidas e projetos. Peçam à Lilith um plano com objetivo, valor e prazo. O botão **Usar dados do casal** permite incluir registros financeiros e notas no pedido ao Google. Desligue para conversar sem esses dados. Imagens são enviadas somente ao apertar Enviar. O histórico da conversa da Lilith fica apenas na memória daquela janela, sem armazenamento remoto. Voz desligada por padrão; síntese de voz do Android/navegador e ditado do sistema, não Gemini Live.
+**Planejar compra:** cadastrem renda, orçamento, dívidas e projetos. Peçam à Lilith um plano com objetivo, valor e prazo. O botão **Usar dados do casal** permite incluir registros financeiros e notas no pedido ao Google. Desligue para conversar sem esses dados. Imagens são enviadas somente ao apertar Enviar. O histórico da conversa da Lilith fica apenas na memória daquela janela, sem armazenamento remoto. Voz desligada por padrão; configure sua chave ElevenLabs, ID da voz e modelo em Configurações → Lilith. A voz é sintetizada no servidor e reproduzida no Android/navegador. O ditado usa o sistema do celular. Não é uma sessão Gemini Live.
 
 **Bolinha Android:** Configurações → Ativar bolinha da Lilith. Conceda a permissão de aparecer sobre outros apps. Uma notificação permite parar o serviço. A amorinha pode ser arrastada, abre um painel inferior e pulsa durante a fala. O atalho para o parceiro abre o aplicativo diretamente na conversa. O sistema operacional pode encerrar o serviço; abra o app e ative novamente. Ao abrir o seletor de arquivo, salvar uma exportação ou usar o ditado, o painel é recolhido para liberar a tela do Android. Quando a ação parte da bolinha, o painel volta ao terminar ou cancelar o seletor/ditado. Ações iniciadas dentro do app mantêm o app aberto.
 
@@ -45,7 +45,7 @@ Saldo realizado = renda recebida − lançamentos. Previsão livre = renda previ
 
 ## Backend e desenvolvimento
 
-Projeto WORKSPACE: `qaiqflcxfxygynumapyp`. Instalação base: `supabase/namora-install.sql`. Extensão aditiva: `supabase/amora-app-upgrade.sql`. A Edge Function está em `supabase/functions/amora/`. As tabelas são `namora_*`; nenhum dado dos outros aplicativos é alterado.
+Projeto WORKSPACE: `qaiqflcxfxygynumapyp`. Instalação base: `supabase/namora-install.sql`. Extensões aditivas: `supabase/amora-app-upgrade.sql` e `supabase/amora-mobile-upgrade.sql`. A Edge Function está em `supabase/functions/amora/`. As tabelas são `namora_*`; nenhum dado dos outros aplicativos é alterado.
 
 RLS verifica o vínculo em cada leitura/escrita. Chat não aceita remetente forjado. Quadros e traços precisam pertencer ao mesmo casal. Estados dos jogos e credenciais só podem ser escritos pela função autenticada. A função valida o usuário com Auth e limita requisições de Gemini por casal (12/minuto). A tabela de credenciais não tem políticas para clientes de propósito; o aviso informativo do advisor para essa tabela representa negação de acesso.
 
@@ -65,3 +65,11 @@ pnpm test:app
 `.github/workflows/android.yml` compila o frontend, roda os testes, cria o APK e publica o download em Releases. Um job separado tenta verificar a abertura e a bolinha sobre a tela inicial em emulador Android 15. Confira o resultado desse job: falhas da infraestrutura do emulador não representam validação do aplicativo. O APK é **de teste**, assinado com chave debug. Não é uma publicação Play Store. Builds em máquinas/execuções diferentes podem usar chaves debug diferentes; para atualizações preservando instalação, configure uma chave de assinatura persistente antes de distribuir novas versões. Não publique chaves ou senhas no repositório.
 
 A validação em emulador cobre a abertura e a tela de conta. Sobreposição, síntese de voz, captura em outros aplicativos, autenticação real do casal e chamadas Gemini exigem teste no celular e uma chave válida. O sucesso do build não substitui esses testes.
+
+## Fotos e arquivos
+
+A câmera pede permissão individual, permite alternar frontal/traseira e salva fotos com moldura, frase e ícone opcional no álbum do vínculo. Também é possível importar imagens. Arquivos permitem criar pastas, buscar, renomear, mover, baixar e excluir. Limite de 20 MB por arquivo; metadados e conteúdo ficam no Supabase, no bucket privado `amora-private`, com acesso restrito ao casal. A consulta aberta atualiza a cada sete segundos; sem cache offline de arquivos.
+
+**Google Drive opcional:** em Configurações → Drive, configure um cliente OAuth Web próprio com Drive API ativada, escopo `drive.file`, e URI `https://delta-1.github.io/-N-amora/docs/drive-callback.html`. Depois conecte a conta Google. Novos envios tentam salvar uma cópia na pasta do casal; o botão Drive permite tentar novamente ou copiar arquivos antigos. A conexão retorna ao Android por link `amora://drive-callback`. Não existe sincronização bidirecional: alterações externas no Drive não substituem os arquivos no Amora. Ao excluir no Amora, cópias no Drive permanecem. Credenciais OAuth, tokens e chave ElevenLabs ficam criptografados no servidor.
+
+A configuração de voz requer dois membros no vínculo, chave ElevenLabs com acesso à voz e à síntese, e créditos disponíveis. Voz, câmera física e OAuth com credenciais reais precisam de validação no aparelho.

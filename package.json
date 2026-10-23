@@ -18,7 +18,7 @@
     "preview": "vite preview --config vite.pages.config.ts",
     "test:pages": "node --test tests/pages.test.mjs",
     "test:supabase": "node tests/supabase.test.mjs",
-    "test:app": "node --test tests/app.test.mjs && node tests/app-rls.test.mjs"
+    "test:app": "node --test tests/app.test.mjs tests/mobile.test.mjs && node tests/app-rls.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
