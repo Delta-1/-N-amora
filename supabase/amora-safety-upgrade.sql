@@ -62,6 +62,9 @@ begin
   if exists(select 1 from public.namora_safety_events where user_id=uid and kind='sos' and created_at>now()-interval '1 minute') then raise exception 'SOS já enviado. Aguarde um minuto para repetir.';end if;
   insert into public.namora_safety_events(couple_id,user_id,kind,body) values(cid,uid,'sos',nm||' pediu ajuda. Entre em contato agora.');
  elsif a<>'snapshot' then raise exception 'Ação inválida.';end if;
+ if coalesce((p->>'lite')::boolean,false) then
+  return jsonb_build_object('enabled',coalesce(t.enabled,false),'steps_enabled',coalesce(t.steps_enabled,false),'events',(select coalesce(jsonb_agg(x order by id),'[]') from(select id,user_id,kind,body,created_at from public.namora_safety_events where couple_id=cid and id>coalesce((p->>'since')::bigint,0) order by id desc limit 50)x));
+ end if;
  month_start:=date_trunc('month',now())::date;
  if p?'month' then
   if p->>'month' !~ '^\d{4}-\d{2}$' then raise exception 'Mês inválido.';end if;
