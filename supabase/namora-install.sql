@@ -76,13 +76,13 @@ begin
   pname:=btrim(payload->>'name');if pname is null or length(pname) not between 1 and 50 then raise exception 'Informe seu nome.'; end if;
   if a='create' then
    title:=btrim(payload->>'title');if title is null or length(title) not between 1 and 70 then raise exception 'Informe o nome do cantinho.'; end if;
-   code:=upper(substr(replace(gen_random_uuid()::text,'-',''),1,16));
+   code:=upper(substr(replace(gen_random_uuid()::text,'-',''),1,10));
    insert into public.namora_couples(name,since,invite_hash,invite_expires) values(title,nullif(payload->>'since','')::date,encode(sha256(convert_to(code,'UTF8')),'hex'),now()+interval '24 hours') returning id into cid;
    insert into public.namora_members(user_id,couple_id,slot,name) values(uid,cid,1,pname);
    return jsonb_build_object('ok',true,'code',code);
   else
    code:=upper(regexp_replace(payload->>'code','[\s-]','','g'));
-   if code is null or code !~ '^[A-F0-9]{16}$' then return jsonb_build_object('error','O convite tem 16 letras e números.'); end if;
+   if code is null or code !~ '^([A-F0-9]{10}|[A-F0-9]{16})$' then return jsonb_build_object('error','O convite tem 10 letras e números.'); end if;
    select id into cid from public.namora_couples where invite_hash=encode(sha256(convert_to(code,'UTF8')),'hex') and invite_expires>now() for update;
    if cid is null then return jsonb_build_object('error','Convite inválido ou expirado. Peça um novo código.'); end if;
    select count(*),min(slot) into n,used_slot from public.namora_members where couple_id=cid;
@@ -95,7 +95,7 @@ begin
  if cid is null then raise exception 'Crie ou entre em um vínculo primeiro.'; end if;
  perform 1 from public.namora_couples where id=cid for update;
  if a='invite' then
-  code:=upper(substr(replace(gen_random_uuid()::text,'-',''),1,16));
+  code:=upper(substr(replace(gen_random_uuid()::text,'-',''),1,10));
   update public.namora_couples set invite_hash=encode(sha256(convert_to(code,'UTF8')),'hex'),invite_expires=now()+interval '24 hours' where id=cid;
   return jsonb_build_object('ok',true,'code',code);
  elsif a='profile' then

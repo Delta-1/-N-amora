@@ -11,7 +11,7 @@ try{
  const as=async(uid)=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",[uid,JSON.stringify({sub:uid,is_anonymous:false})]);await db.exec('set role authenticated');};
  const action=async(payload)=>(await db.query('select public.namora_action($1::jsonb) as value',[JSON.stringify(payload)])).rows[0].value;
  await db.exec('set role anon');await assert.rejects(()=>action({action:'create',name:'No',title:'No'}));ok(true,'anonymous role cannot execute the app RPC');
- await as(alice);const created=await action({action:'create',name:'Alice',title:'Our world',since:'2025-01-01'});ok(created.ok&&created.code.length===16,'authenticated user creates link and invitation');
+ await as(alice);const created=await action({action:'create',name:'Alice',title:'Our world',since:'2025-01-01'});ok(created.ok&&created.code.length===10,'authenticated user creates link and invitation');
  await as(bob);ok((await action({action:'join',name:'Bob',code:created.code})).ok,'second user joins by code');
  await as(mallory);ok(!!(await action({action:'join',name:'Mallory',code:created.code})).error,'used invitation cannot be reused by a third user');
  await as(alice);await assert.rejects(()=>action({action:'create',name:'Alice',title:'Other'}));ok(true,'one account cannot belong to multiple active links');

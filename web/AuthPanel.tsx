@@ -1,17 +1,20 @@
-import { useState, type FormEvent } from 'react';
-import { Heart, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Heart, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import {native} from './native';
-import { getClient, configureBackend } from './supabase';
+import { getClient, configureBackend, rememberSession, setRememberSession } from './supabase';
 export default function AuthPanel({ onDone, onNotify, recovery = false }: {
     onDone: () => void;
     onNotify: (s: string) => void;
     recovery?: boolean;
 }) {
     const [mode, setMode] = useState<'login' | 'signup' | 'reset' | 'password'>(recovery ? 'password' : 'login');
+    const [showPassword,setShowPassword]=useState(false);
+    const [remember,setRemember]=useState(rememberSession);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [setup, setSetup] = useState(false);
     const available = !!getClient();
+    useEffect(()=>{if(recovery)setMode('password');},[recovery]);
     async function submit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setBusy(true);
@@ -22,6 +25,7 @@ export default function AuthPanel({ onDone, onNotify, recovery = false }: {
                 await configureBackend({ supabaseUrl: String(f.get('url')), supabasePublishableKey: String(f.get('key')) });
                 return;
             }
+            setRememberSession(remember);
             const supa = getClient()!;
             const email = String(f.get('email') || '').trim();
             const password = String(f.get('password') || '');
@@ -65,5 +69,5 @@ export default function AuthPanel({ onDone, onNotify, recovery = false }: {
             setBusy(false);
         }
     }
-    return <div className="auth-panel">{!available || setup ? <><div className="link-illustration"><ShieldCheck size={40}/></div><h3>Conectar o nosso cantinho</h3><p>Escolha primeiro o projeto Supabase. A configuração pode ser publicada junto com o app; estes campos permitem testar neste aparelho.</p><form className="form" onSubmit={submit}><label>URL do projeto<input name="url" type="url" required placeholder="https://seu-projeto.supabase.co"/></label><label>Chave publishable ou anon<textarea name="key" required placeholder="sb_publishable_…"/></label><p className="muted-small">Nunca use service_role, sb_secret_ ou sua chave de IA. O banco deve ter o script de instalação e as regras de acesso aplicados.</p>{error && <p role="alert" className="form-error">{error}</p>}<button className="button full" disabled={busy}>Conectar Supabase <ArrowRight size={16}/></button></form></> : <><div className="link-illustration"><Heart size={36}/></div><h3>Seu amor tem um cantinho aqui.</h3><p>Uma conta para cada pessoa, com e-mail e senha.</p><div className="segmented link-tabs"><button className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>Entrar</button><button className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>Criar conta</button></div><form className="form" onSubmit={submit}>{mode === 'signup' && <label>Seu nome<input name="name" required maxLength={50} autoComplete="name"/></label>}{mode !== 'password' && <label>E-mail<input name="email" type="email" required autoComplete="email"/></label>}{mode !== 'reset' && <label>{mode === 'password' ? 'Nova senha' : 'Senha'}<input name="password" type="password" required minLength={8} maxLength={128} autoComplete={mode === 'login' ? 'current-password' : 'new-password'}/></label>}{error && <p role="alert" className="form-error">{error}</p>}<button disabled={busy} className="button full">{busy ? 'Só um instante…' : mode === 'signup' ? 'Criar minha conta' : mode === 'reset' ? 'Enviar link de recuperação' : mode === 'password' ? 'Salvar nova senha' : 'Entrar no Amora'}<ArrowRight size={16}/></button></form><button className="text-button" onClick={() => setMode(mode === 'reset' ? 'login' : 'reset')}>{mode === 'reset' ? 'Voltar para entrar' : 'Esqueci minha senha'}</button></>}</div>;
+    return <div className="auth-panel">{!available || setup ? <><div className="link-illustration"><ShieldCheck size={40}/></div><h3>Conectar o nosso cantinho</h3><p>Escolha primeiro o projeto Supabase. A configuração pode ser publicada junto com o app; estes campos permitem testar neste aparelho.</p><form className="form" onSubmit={submit}><label>URL do projeto<input name="url" type="url" required placeholder="https://seu-projeto.supabase.co"/></label><label>Chave publishable ou anon<textarea name="key" required placeholder="sb_publishable_…"/></label><p className="muted-small">Nunca use service_role, sb_secret_ ou sua chave de IA. O banco deve ter o script de instalação e as regras de acesso aplicados.</p>{error && <p role="alert" className="form-error">{error}</p>}<button className="button full" disabled={busy}>Conectar Supabase <ArrowRight size={16}/></button></form></> : <><div className="link-illustration"><Heart size={36}/></div><h3>Seu amor tem um cantinho aqui.</h3><p>Uma conta para cada pessoa, com e-mail e senha.</p><div className="segmented link-tabs"><button className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>Entrar</button><button className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>Criar conta</button></div><form className="form" onSubmit={submit}>{mode === 'signup' && <label>Seu nome<input name="name" required maxLength={50} autoComplete="name"/></label>}{mode !== 'password' && <label>E-mail<input name="email" type="email" required autoComplete="email"/></label>}{mode !== 'reset' && <label>{mode === 'password' ? 'Nova senha' : 'Senha'}<input name="password" type={showPassword?'text':'password'} required minLength={8} maxLength={128} autoComplete={mode === 'login' ? 'current-password' : 'new-password'}/><button type="button" className="password-toggle" aria-label={showPassword?'Ocultar senha':'Mostrar senha'} onClick={()=>setShowPassword(!showPassword)}>{showPassword?<EyeOff size={18}/>:<Eye size={18}/>} {showPassword?'Ocultar':'Mostrar senha'}</button></label>}{(mode==='login'||mode==='signup')&&<label className="check-label"><input type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)}/>Manter conectado neste aparelho</label>}{error && <p role="alert" className="form-error">{error}</p>}<button disabled={busy} className="button full">{busy ? 'Só um instante…' : mode === 'signup' ? 'Criar minha conta' : mode === 'reset' ? 'Enviar link de recuperação' : mode === 'password' ? 'Salvar nova senha' : 'Entrar no Amora'}<ArrowRight size={16}/></button></form><button className="text-button" onClick={() => setMode(mode === 'reset' ? 'login' : 'reset')}>{mode === 'reset' ? 'Voltar para entrar' : 'Esqueci minha senha'}</button></>}</div>;
 }

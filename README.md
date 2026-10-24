@@ -87,3 +87,15 @@ O comparativo mensal usa o sensor STEP_COUNTER, apenas após ativação e enquan
 A câmera tem controles fixos, moldura BM, marca opcional de data/data e hora/nome, letras e frase; som de captura configurável. Android 10+ grava em Pictures/NAMORA pelo MediaStore e inclui descrição e data; Android 8/9 usa o seletor de arquivo. Também tenta enviar ao álbum privado. Sem internet, confira a cópia local; ela não é automaticamente reenviada ao álbum. Sobreposição é opt-in, com serviço independente da tela; uma notificação permite parar.
 
 Backend adicional: `supabase/amora-safety-upgrade.sql`; RPC autenticada `namora_track`, com consentimento individual, RLS e lógica privada. Tokens nativos usam Android Keystore; a sessão é sincronizada com o WebView ao voltar ao app. Não existem credenciais de serviço no APK.
+
+## Amora, convites e conversas · 3.3
+
+A mascote é uma gatinha chamada Amora, desenhada em SVG e compartilhada entre tela, ícone web e Android. A apresentação aparece uma vez por conta (com lembrete local por aparelho), explica os módulos e pode ser ouvida pela voz do dispositivo, sem consumir APIs. Configurações → Meu app permite rever o tutorial.
+
+A conta vem antes do vínculo: escolha **Criar nosso cantinho** ou **Tenho um convite**. Escolha papel de parede local (gatinhos, carinho, estrelas ou liso). Convites novos têm 10 caracteres aleatórios, validade de 24 horas, uso único e limite de tentativas; convites antigos de 16 caracteres continuam válidos. QR e link usam a mesma credencial do convite: compartilhe apenas com quem vai entrar. O QR pode ser lido pela câmera do outro celular; login é obrigatório e o vínculo só é criado após confirmar. A página oferece abrir o convite no APK via `amora://invite?code=...`. O banco ainda limita o vínculo a duas pessoas; múltiplos parceiros não fazem parte desta versão.
+
+Conversa abre contatos e depois uma tela dedicada, com volta para início e composição fixa. A Lilith também usa uma tela de conversa; no painel sobre outros aplicativos, usa apresentação compacta e translúcida. A gaveta acompanha o arraste do risquinho, recolhe ao atingir distância/velocidade e volta ao lugar em arrastes curtos. A bolinha pode ser removida soltando no X inferior; isso desabilita o serviço até nova ativação.
+
+O login oferece mostrar/ocultar senha e **Manter conectado**. Desmarcar usa armazenamento da sessão e interrompe os serviços persistentes locais. Android oferece bloqueio opcional por biometria ou credencial do dispositivo, implementado pelo sistema, sem acesso à digital. Precisa de bloqueio de tela cadastrado; Android 8 usa a credencial do dispositivo. É proteção local da sessão já autenticada, não um novo login no servidor. Sair da conta remove a sessão nativa e desabilita o bloqueio.
+
+Aplicar `supabase/amora-invite-upgrade.sql` antes da publicação. As chaves Gemini/ElevenLabs continuam configuráveis e criptografadas no servidor; nenhuma chave global de produção foi fornecida para esta atualização, e cobrança por usuário continua fora do escopo.

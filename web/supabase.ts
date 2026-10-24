@@ -5,6 +5,9 @@ export type BackendConfig = {
     supabasePublishableKey: string;
     aiFunctionName?: string;
 };
+export function rememberSession(){return localStorage.getItem('amora.remember')!=='off';}
+export function setRememberSession(on:boolean){const from=rememberSession()?localStorage:sessionStorage,to=on?localStorage:sessionStorage;const saved=from.getItem('namora.auth.v1');localStorage.setItem('amora.remember',on?'on':'off');if(saved)to.setItem('namora.auth.v1',saved);if(from!==to)from.removeItem('namora.auth.v1');if(!on)window.AmoraAndroid?.clearSession();}
+export const authStorage={getItem:(key:string)=>(rememberSession()?localStorage:sessionStorage).getItem(key),setItem:(key:string,value:string)=>{(rememberSession()?localStorage:sessionStorage).setItem(key,value);},removeItem:(key:string)=>{localStorage.removeItem(key);sessionStorage.removeItem(key);}};
 let client: SupabaseClient | null = null;
 let activeConfig:BackendConfig|null=null;
 export const getBackendConfig=()=>activeConfig;
@@ -52,9 +55,9 @@ async function loadBackend() {
         return null;
     const clean = validateConfig(config);activeConfig=clean;
     const { createClient } = await import('@supabase/supabase-js');
-    client = createClient(clean.supabaseUrl, clean.supabasePublishableKey, { auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: true, storageKey: 'namora.auth.v1' } });
-    const restoreNative=async()=>{try{const n=JSON.parse(window.AmoraAndroid?.trackingSession?.()||'null'),saved=JSON.parse(localStorage.getItem('namora.auth.v1')||'null');if(n?.access&&n.user===saved?.user?.id&&n.expires>(saved?.expires_at||0))await client!.auth.setSession({access_token:n.access,refresh_token:n.refresh});}catch{}};await restoreNative();if(!document.hidden)client.auth.startAutoRefresh();document.addEventListener('visibilitychange',()=>{if(document.hidden)client?.auth.stopAutoRefresh();else void restoreNative().finally(()=>client?.auth.startAutoRefresh());});window.addEventListener('amora-native',e=>{if((e as CustomEvent).detail?.trackingSessionUpdated)void restoreNative();});
-    client.auth.onAuthStateChange((_event,session)=>{if(session)queueMicrotask(()=>window.AmoraAndroid?.configureTracking?.(JSON.stringify({access:session.access_token,refresh:session.refresh_token,expires:session.expires_at,user:session.user.id,key:clean.supabasePublishableKey})));});
+    client = createClient(clean.supabaseUrl, clean.supabasePublishableKey, { auth: { persistSession: true, storage:authStorage, autoRefreshToken: false, detectSessionInUrl: true, storageKey: 'namora.auth.v1' } });
+    const restoreNative=async()=>{try{const n=JSON.parse(window.AmoraAndroid?.trackingSession?.()||'null'),saved=JSON.parse(authStorage.getItem('namora.auth.v1')||'null');if(n?.access&&n.user===saved?.user?.id&&n.expires>(saved?.expires_at||0))await client!.auth.setSession({access_token:n.access,refresh_token:n.refresh});}catch{}};await restoreNative();if(!document.hidden)client.auth.startAutoRefresh();document.addEventListener('visibilitychange',()=>{if(document.hidden)client?.auth.stopAutoRefresh();else void restoreNative().finally(()=>client?.auth.startAutoRefresh());});window.addEventListener('amora-native',e=>{if((e as CustomEvent).detail?.trackingSessionUpdated)void restoreNative();});
+    client.auth.onAuthStateChange((_event,session)=>{if(session&&rememberSession())queueMicrotask(()=>window.AmoraAndroid?.configureTracking?.(JSON.stringify({access:session.access_token,refresh:session.refresh_token,expires:session.expires_at,user:session.user.id,key:clean.supabasePublishableKey})));});
     return client;
 }
 export async function configureBackend(config: BackendConfig) { const clean = validateConfig(config); localStorage.setItem('namora.backend.v1', JSON.stringify(clean)); location.reload(); }

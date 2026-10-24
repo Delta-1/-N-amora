@@ -4,7 +4,7 @@ const targets = await (await fetch('http://127.0.0.1:9223/json/list')).json();
 const target = targets.find(t => t.type === 'page' && t.url.includes('amora.local') &&
   (page === 'overlay' ? t.url.includes('overlay=1') : !t.url.includes('overlay=1')));
 if (!target) throw Error(`No Amora ${page} WebView found`);
-await new Promise((resolve, reject) => {
+const value = await new Promise((resolve, reject) => {
   const socket = new WebSocket(target.webSocketDebuggerUrl);
   const timer = setTimeout(() => { socket.close(); reject(Error('WebView evaluation timed out')); }, 15000);
   const finish = (err, value) => { clearTimeout(timer); socket.close(); err ? reject(err) : resolve(value); };
@@ -18,3 +18,5 @@ await new Promise((resolve, reject) => {
     else finish(null, result.result.result.value);
   });
 });
+
+if(value!==undefined)console.log(typeof value==='string'?value:JSON.stringify(value));
