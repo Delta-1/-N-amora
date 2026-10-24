@@ -185,6 +185,7 @@ try:
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'chat'}}))")
     wait_ui(lambda x: 'Voltar das mensagens' in x and 'Só vocês dois' in x, 'partner chat opens as its own screen')
     evaluate('main', "(()=>{if(getComputedStyle(document.querySelector('.mobile-dock')).display!=='none')throw Error('Navigation covers conversation');const c=document.querySelector('.composer').getBoundingClientRect();if(c.bottom>innerHeight||c.top<0)throw Error('Composer is outside the viewport');return 'Conversation composer visible';})()")
+    screenshot('conversation')
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'camera'}}))")
     wait_ui(lambda x:'Personalizar foto' in x and 'Tirar foto' in x,'floating shortcut can open camera from the full conversation')
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'home'}}))")
