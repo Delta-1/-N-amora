@@ -60,7 +60,10 @@ def click_ui(xml, predicate):
 def evaluate(page, expression):
     pid = shell('pidof', 'com.amora.app').strip().split()[0]
     subprocess.run(['adb', 'forward', 'tcp:9223', f'localabstract:webview_devtools_remote_{pid}'], check=True)
-    subprocess.run(['node', 'scripts/android-eval.mjs', page, expression], check=True)
+    result=subprocess.run(['node', 'scripts/android-eval.mjs', page, expression],capture_output=True,text=True)
+    if result.returncode: raise AssertionError(result.stderr)
+    if result.stdout.strip(): print(result.stdout.strip(),flush=True)
+    return result.stdout.strip()
 
 
 def cancel_export():
@@ -81,8 +84,16 @@ def cancel_export():
 
 
 try:
-    wait_ui(lambda x: 'Criar conta' in x and ('E-mail' in x or 'Senha' in x),
+    xml=wait_ui(lambda x: 'Criar conta' in x and ('E-mail' in x or 'Senha' in x),
             'APK renders account onboarding')
+    evaluate('main', "document.querySelector('.password-toggle').scrollIntoView({block:'center'})")
+    xml=wait_ui(lambda x:'Mostrar senha' in x,'show-password control is reachable')
+    click_ui(xml,lambda n:n.get('content-desc','')=='Mostrar senha' or n.get('text','')=='Mostrar senha')
+    xml=wait_ui(lambda x:'Ocultar senha' in x,'password becomes visible after tapping show')
+    evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='text')throw Error('Password remains hidden');return 'Visible password verified';})()")
+    click_ui(xml,lambda n:n.get('content-desc','')=='Ocultar senha' or n.get('text','')=='Ocultar')
+    wait_ui(lambda x:'Mostrar senha' in x,'password can be hidden again')
+    evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='password')throw Error('Password remains visible');return 'Password visibility toggle works';})()")
     subprocess.run(['adb', 'logcat', '-c'], check=True)
     # Consent is granted only on the clean test emulator.
     shell('appops', 'set', 'com.amora.app', 'SYSTEM_ALERT_WINDOW', 'allow')
@@ -137,6 +148,17 @@ try:
     evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
     xml = wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'Apps drawer opens all routes')
     evaluate('main', "(()=>{const map=Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==='Mapa').getBoundingClientRect();if(map.height<30||map.top<0||map.bottom>innerHeight)throw Error('Map shortcut is clipped by the drawer');return 'Map shortcut fits the visible drawer';})()")
+    import json
+    # Real finger gestures, including a short drag that must return to its original position.
+    handle=next(n for n in ET.fromstring(xml).iter('node') if 'Arraste para baixo' in n.get('content-desc','') or 'Arraste para baixo' in n.get('text',''))
+    x1,y1,x2,y2=map(int,re.findall(r'-?\d+',handle.get('bounds')))
+    x,y=(x1+x2)//2,(y1+y2)//2
+    shell('input','swipe',str(x),str(y),str(x),str(y+35),'550')
+    wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'short drawer drag returns to its open position')
+    shell('input','swipe',str(x),str(y),str(x),str(y+310),'450')
+    wait_ui(lambda x: 'Aplicativos' not in x and 'Nosso canto' in x, 'long drawer drag dismisses to the previous screen')
+    evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
+    xml=wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'drawer reopens after a drag dismissal')
     click_ui(xml, lambda n: n.get('text', '') == 'Mapa')
     wait_ui(lambda x: 'Mapa com a posição' in x and 'Pertinho' in x, 'map opens before any GPS position is available')
     evaluate('main', "(()=>{const map=document.querySelector('.leaflet-couple-map');if(!map.classList.contains('leaflet-container')||map.getBoundingClientRect().height<100)throw Error('Leaflet map did not initialize');return 'Real map initialized without GPS';})()")
@@ -160,6 +182,21 @@ try:
         evaluate('main', "Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==="+json.dumps(label)+").click()")
         wait_ui(lambda x: title in x, 'menu opens '+label)
 
+    evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'chat'}}))")
+    wait_ui(lambda x: 'Mensagem para o parceiro' in x or 'Uma mensagem para seu amor' in x, 'partner chat opens as its own screen')
+    evaluate('main', "(()=>{if(getComputedStyle(document.querySelector('.mobile-dock')).display!=='none')throw Error('Navigation covers conversation');const c=document.querySelector('.composer').getBoundingClientRect();if(c.bottom>innerHeight||c.top<0)throw Error('Composer is outside the viewport');return 'Conversation composer visible';})()")
+    shell('input','keyevent','KEYCODE_BACK')
+    wait_ui(lambda x: 'A vida fica mais bonita' in x and 'Apps' in x, 'Android back returns from conversation to home')
+    evaluate('main', "window.dispatchEvent(new Event('amora-tour'))")
+    wait_ui(lambda x: 'Oi, eu sou a Amora!' in x, 'Amora tutorial can be reopened')
+    evaluate('main', "document.querySelector('[aria-label=\"Pular apresentação da Amora\"]').click()")
+    x1,y1,x2,y2=wait_bubble()
+    h=int(shell('wm','size').strip().split()[-1].split('x')[-1]);w=int(shell('wm','size').strip().split()[-1].split('x')[0])
+    shell('input','swipe',str((x1+x2)//2),str((y1+y2)//2),str(w//2),str(h-70),'1000')
+    time.sleep(2)
+    services=shell('dumpsys','activity','services','com.amora.app')
+    assert 'OverlayService' not in services
+    print('PASS: dropping bubble on X disables its service',flush=True)
 
 finally:
     screenshot('final')
