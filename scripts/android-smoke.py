@@ -86,10 +86,12 @@ def cancel_export():
 try:
     xml=wait_ui(lambda x: 'Criar conta' in x and ('E-mail' in x or 'Senha' in x),
             'APK renders account onboarding')
-    click_ui(xml,lambda n:'Mostrar senha' in n.get('content-desc','') or 'Mostrar senha' in n.get('text',''))
+    evaluate('main', "document.querySelector('.password-toggle').scrollIntoView({block:'center'})")
+    xml=wait_ui(lambda x:'Mostrar senha' in x,'show-password control is reachable')
+    click_ui(xml,lambda n:n.get('content-desc','')=='Mostrar senha' or n.get('text','')=='Mostrar senha')
     xml=wait_ui(lambda x:'Ocultar senha' in x,'password becomes visible after tapping show')
     evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='text')throw Error('Password remains hidden');return 'Visible password verified';})()")
-    click_ui(xml,lambda n:'Ocultar senha' in n.get('content-desc','') or n.get('text','')=='Ocultar')
+    click_ui(xml,lambda n:n.get('content-desc','')=='Ocultar senha' or n.get('text','')=='Ocultar')
     wait_ui(lambda x:'Mostrar senha' in x,'password can be hidden again')
     evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='password')throw Error('Password remains visible');return 'Password visibility toggle works';})()")
     subprocess.run(['adb', 'logcat', '-c'], check=True)
