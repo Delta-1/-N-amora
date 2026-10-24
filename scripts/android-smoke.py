@@ -84,10 +84,14 @@ def cancel_export():
 
 
 try:
-    wait_ui(lambda x: 'Criar conta' in x and ('E-mail' in x or 'Senha' in x),
+    xml=wait_ui(lambda x: 'Criar conta' in x and ('E-mail' in x or 'Senha' in x),
             'APK renders account onboarding')
-    evaluate('main', "document.querySelector('[aria-label=\"Mostrar senha\"]').click()")
-    evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='text')throw Error('Password remains hidden');document.querySelector('[aria-label=\"Ocultar senha\"]').click();if(document.querySelector('input[name=password]').type!=='password')throw Error('Password remains visible');return 'Password visibility toggle works';})()")
+    click_ui(xml,lambda n:'Mostrar senha' in n.get('content-desc','') or 'Mostrar senha' in n.get('text',''))
+    xml=wait_ui(lambda x:'Ocultar senha' in x,'password becomes visible after tapping show')
+    evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='text')throw Error('Password remains hidden');return 'Visible password verified';})()")
+    click_ui(xml,lambda n:'Ocultar senha' in n.get('content-desc','') or n.get('text','')=='Ocultar')
+    wait_ui(lambda x:'Mostrar senha' in x,'password can be hidden again')
+    evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='password')throw Error('Password remains visible');return 'Password visibility toggle works';})()")
     subprocess.run(['adb', 'logcat', '-c'], check=True)
     # Consent is granted only on the clean test emulator.
     shell('appops', 'set', 'com.amora.app', 'SYSTEM_ALERT_WINDOW', 'allow')
