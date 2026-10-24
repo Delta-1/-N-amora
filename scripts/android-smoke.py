@@ -91,7 +91,7 @@ try:
     click_ui(xml,lambda n:n.get('content-desc','')=='Mostrar senha' or n.get('text','')=='Mostrar senha')
     xml=wait_ui(lambda x:'Ocultar senha' in x,'password becomes visible after tapping show')
     evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='text')throw Error('Password remains hidden');return 'Visible password verified';})()")
-    click_ui(xml,lambda n:n.get('content-desc','')=='Ocultar senha' or n.get('text','')=='Ocultar')
+    click_ui(xml,lambda n:n.get('content-desc','')=='Ocultar senha' or n.get('text','') in ('Ocultar','Ocultar senha'))
     wait_ui(lambda x:'Mostrar senha' in x,'password can be hidden again')
     evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='password')throw Error('Password remains visible');return 'Password visibility toggle works';})()")
     subprocess.run(['adb', 'logcat', '-c'], check=True)
