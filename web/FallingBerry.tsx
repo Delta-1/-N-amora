@@ -4,7 +4,7 @@ import Berry from './Berry';
 export default function FallingBerry(){
  const [falling,setFalling]=useState(false);
  const [drop,setDrop]=useState(55);
- return <button type="button" className="falling-berry" aria-label="Brincar com a gatinha Amora" title="Toque na Amora 😸" onClick={e=>{
+ return <button type="button" className="falling-berry" aria-label="Fazer a amora cair" title="Toque na amora" onClick={e=>{
   if(falling)return;
   const button=e.currentTarget,card=button.closest('.daily-card,.onboard-brand');
   const space=card?card.getBoundingClientRect().bottom-button.getBoundingClientRect().bottom-12:55;
