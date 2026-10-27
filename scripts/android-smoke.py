@@ -96,6 +96,49 @@ try:
     wait_ui(lambda x:'Mostrar senha' in x,'password can be hidden again')
     evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='password')throw Error('Password remains visible');return 'Password visibility toggle works';})()")
     evaluate('main',"(async()=>{const pdf=await import('./pdfjs/pdf.min.js');pdf.GlobalWorkerOptions.workerSrc=new URL('./pdfjs/pdf.worker.min.js',location.href).href;globalThis.pdfjsWorker=await import('./pdfjs/pdf.worker.min.js');const doc=await pdf.getDocument({data:new TextEncoder().encode(\"%PDF-1.4\\n1 0 obj\\n<< /Type /Catalog /Pages 2 0 R >>\\nendobj\\n2 0 obj\\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\\nendobj\\n3 0 obj\\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] /Contents 4 0 R >>\\nendobj\\n4 0 obj\\n<< /Length 28 >>\\nstream\\n0 0 1 rg 20 20 200 300 re f\\nendstream\\nendobj\\nxref\\n0 5\\n0000000000 65535 f \\n0000000009 00000 n \\n0000000058 00000 n \\n0000000115 00000 n \\n0000000202 00000 n \\ntrailer\\n<< /Size 5 /Root 1 0 R >>\\nstartxref\\n279\\n%%EOF\"),isEvalSupported:false}).promise;const page=await doc.getPage(1),viewport=page.getViewport({scale:1}),canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;const pixel=canvas.getContext('2d').getImageData(100,100,1,1).data;if(pixel[2]!==255||pixel[0]!==0)throw Error('PDF page did not render');await doc.destroy();return 'Private PDF page renders inside Android without an external viewer';})()")
+    shell('pm','grant','com.amora.app','android.permission.POST_NOTIFICATIONS')
+    evaluate('main', 'window.AmoraAndroid.testSOS()')
+    time.sleep(1)
+    notification_dump=shell('dumpsys','notification','--noredact')
+    assert 'amora-sos-vibrate-v1' in notification_dump and 'Teste do SOS neste aparelho' in notification_dump
+    print('PASS: SOS test produces a real private Android notification on the vibration channel',flush=True)
+    import json
+    local_device=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
+    assert 'usageAllowed' in local_device and isinstance(local_device['screen'],bool) and isinstance(local_device['locked'],bool) and 0 <= local_device['battery'] <= 100 and local_device['connection'] in ['wifi','mobile','offline','ethernet','other']
+    print('PASS: usage permission is independently reported without granting app access',flush=True)
+
+    evaluate('main', 'window.AmoraAndroid.youtube("M7lc1UVf-VE")')
+    wait_ui(lambda x:'voltar ao amora' in x.casefold(),'YouTube opens in its own native player screen')
+    evaluate('youtube', "(()=>{if(window.AmoraAndroid)throw Error('Provider page received native bridge');if(location.origin!=='https://com.amora.app')throw Error('YouTube app identity missing');if(!document.querySelector('script[src=\"https://www.youtube.com/iframe_api\"]'))throw Error('Official YouTube API missing');return 'YouTube is isolated from native permissions and has the app referrer identity';})()")
+    shell('input','keyevent','4')
+    wait_ui(lambda x:'Apps' in x or 'Criar conta' in x,'native player returns to the Amora')
+
+    # A fixture session is local to this clean emulator; it cannot authenticate to the backend.
+    evaluate('main', "window.AmoraAndroid.configureTracking(JSON.stringify({user:'f0000000-0000-4000-8000-000000000001',access:'local-test-not-a-token',refresh:'local-test',expires:Math.floor(Date.now()/1000)+3600,key:'local-test'}))")
+    time.sleep(.5)
+    xml=shell('uiautomator','dump','/sdcard/amora.xml');xml=shell('cat','/sdcard/amora.xml')
+    if 'agora não' in xml.casefold():click_ui(xml,lambda n:n.get('text','').casefold()=='agora não')
+    evaluate('main', 'window.AmoraAndroid.playMusic(JSON.stringify({url:"https://raw.githubusercontent.com/Delta-1/-N-amora/companion-upgrade/public/audio/amora-chime.wav",title:"Amora · teste de áudio",position:0,playing:true}))')
+    started=False
+    for _ in range(12):
+        time.sleep(.4)
+        status=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
+        if status.get('musicPlaying') and status.get('musicPosition',0)>500:started=True;break
+    assert started,'Native audio must decode and begin playback'
+    first_position=status['musicPosition']
+    shell('input','keyevent','KEYCODE_HOME')
+    time.sleep(2)
+    status=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
+    assert status.get('musicPlaying') and status['musicPosition']>first_position+1000
+    assert 'MusicService' in shell('dumpsys','activity','services','com.amora.app')
+    print('PASS: real native audio keeps decoding and advancing after the app is minimized',flush=True)
+    shell('am','start','-W','-n','com.amora.app/.MainActivity')
+    evaluate('main','window.AmoraAndroid.clearSession()')
+    time.sleep(.5)
+    assert 'MusicService' not in shell('dumpsys','activity','services','com.amora.app')
+    print('PASS: sign-out cleanup stops the background music service',flush=True)
+
+
     subprocess.run(['adb', 'logcat', '-c'], check=True)
     # Consent is granted only on the clean test emulator.
     shell('appops', 'set', 'com.amora.app', 'SYSTEM_ALERT_WINDOW', 'allow')
@@ -225,22 +268,6 @@ try:
         evaluate('main', "Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==="+json.dumps(label)+").click()")
         wait_ui(lambda x: title in x, 'menu opens '+label)
 
-    shell('pm','grant','com.amora.app','android.permission.POST_NOTIFICATIONS')
-    evaluate('main', 'window.AmoraAndroid.testSOS()')
-    time.sleep(1)
-    notification_dump=shell('dumpsys','notification','--noredact')
-    assert 'amora-sos-vibrate-v1' in notification_dump and 'Teste do SOS neste aparelho' in notification_dump
-    print('PASS: SOS test produces a real private Android notification on the vibration channel',flush=True)
-    local_device=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
-    assert 'usageAllowed' in local_device and isinstance(local_device['screen'],bool) and isinstance(local_device['locked'],bool) and 0 <= local_device['battery'] <= 100 and local_device['connection'] in ['wifi','mobile','offline','ethernet','other']
-    print('PASS: usage permission is independently reported without granting app access',flush=True)
-
-    evaluate('main', 'window.AmoraAndroid.youtube("M7lc1UVf-VE")')
-    wait_ui(lambda x:'Voltar ao Amora' in x,'YouTube opens in its own native player screen')
-    evaluate('youtube', "(()=>{if(window.AmoraAndroid)throw Error('Provider page received native bridge');if(location.origin!=='https://com.amora.app')throw Error('YouTube app identity missing');if(!document.querySelector('script[src=\"https://www.youtube.com/iframe_api\"]'))throw Error('Official YouTube API missing');return 'YouTube is isolated from native permissions and has the app referrer identity';})()")
-    shell('input','keyevent','4')
-    wait_ui(lambda x:'Apps' in x,'native player returns to the Amora')
-
     # Request real MediaProjection consent on the clean emulator, not a mocked stream.
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'cinema'}}));window.__cinemaFrames=0;window.__cinemaCancelled=false;window.__cinemaNativeTest=e=>{if(e.detail.cinemaFrame)window.__cinemaFrames++;if(e.detail.cinemaError)window.__cinemaCancelled=true;};window.addEventListener('amora-native',window.__cinemaNativeTest);window.AmoraAndroid.cinemaShare()")
     wait_ui(lambda x: ('Start' in x or 'Share' in x or 'Compartilhar' in x) and 'com.android.systemui' in x, 'Cinema requests Android screen-sharing consent')
@@ -294,31 +321,6 @@ try:
     services=shell('dumpsys','activity','services','com.amora.app')
     assert 'OverlayService' not in services
     print('PASS: dropping bubble on X disables its service',flush=True)
-
-    # A fixture session is local to this clean emulator; it cannot authenticate to the backend.
-    evaluate('main', "window.AmoraAndroid.configureTracking(JSON.stringify({user:'f0000000-0000-4000-8000-000000000001',access:'local-test-not-a-token',refresh:'local-test',expires:Math.floor(Date.now()/1000)+3600,key:'local-test'}))")
-    time.sleep(.5)
-    xml=shell('uiautomator','dump','/sdcard/amora.xml');xml=shell('cat','/sdcard/amora.xml')
-    if 'Agora não' in xml:click_ui(xml,lambda n:n.get('text','')=='Agora não')
-    evaluate('main', 'window.AmoraAndroid.playMusic(JSON.stringify({url:"https://raw.githubusercontent.com/Delta-1/-N-amora/companion-upgrade/public/audio/amora-chime.wav",title:"Amora · teste de áudio",position:0,playing:true}))')
-    started=False
-    for _ in range(12):
-        time.sleep(.4)
-        status=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
-        if status.get('musicPlaying') and status.get('musicPosition',0)>500:started=True;break
-    assert started,'Native audio must decode and begin playback'
-    first_position=status['musicPosition']
-    shell('input','keyevent','KEYCODE_HOME')
-    time.sleep(2)
-    status=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
-    assert status.get('musicPlaying') and status['musicPosition']>first_position+1000
-    assert 'MusicService' in shell('dumpsys','activity','services','com.amora.app')
-    print('PASS: real native audio keeps decoding and advancing after the app is minimized',flush=True)
-    shell('am','start','-W','-n','com.amora.app/.MainActivity')
-    evaluate('main','window.AmoraAndroid.clearSession()')
-    time.sleep(.5)
-    assert 'MusicService' not in shell('dumpsys','activity','services','com.amora.app')
-    print('PASS: sign-out cleanup stops the background music service',flush=True)
 
     if os.environ.get('GITHUB_REF') == 'refs/heads/main':
         shell('run-as','com.amora.app','mkdir','-p','files/amora-web-v1/active')

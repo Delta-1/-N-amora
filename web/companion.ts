@@ -1,5 +1,5 @@
 import {getClient} from './supabase';
-export async function companion(payload:Record<string,unknown>={}){const c=getClient();if(!c)throw Error('Entre na sua conta.');const {data,error}=await c.rpc('namora_companion',{payload});if(error)throw Error(error.message);return data;}
+export async function companion(payload:Record<string,unknown>={}){const c=getClient();if(!c)throw Error('Entre na sua conta.');const {data,error}=await c.rpc('namora_companion',{payload});if(error)throw Error(error.code==='PGRST202'?'Este recurso aguarda a atualização do servidor.':error.message);return data;}
 export type DeviceSnapshot={platform?:string;online?:boolean;battery?:number;charging?:boolean;screen?:boolean;locked?:boolean;connection?:string;usageAllowed?:boolean;app?:string;usage?:{name:string;minutes:number}[];usageDay?:string};
 export type PersonalStatus={user_id:string;nickname:string;bio:string;emoji:string;mood:string;level:number;note:string;share_device:boolean;share_apps:boolean;snapshot:DeviceSnapshot;device_at:string|null;updated_at:string};
 export const moodOptions=[['feliz','😊'],['apaixonado','🥰'],['tranquilo','😌'],['cansado','😴'],['triste','🥺'],['ansioso','🫂'],['ocupado','🎯']] as const;
