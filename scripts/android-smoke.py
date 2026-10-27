@@ -149,7 +149,7 @@ try:
     evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(getComputedStyle(c).display==='none')throw Error('Rotating menu missing');const buttons=Array.from(c.querySelectorAll('[data-visible=true]'));if(buttons.length!==3||buttons.some(x=>{const r=x.getBoundingClientRect();return r.width<40||r.left<0||r.right>innerWidth||r.bottom>innerHeight;}))throw Error('Rotating shortcuts clipped');return 'Three rotating shortcuts fit the phone';})()")
     xml=wait_ui(lambda x:'Menu giratório' in x and 'Comunidade' in x,'rotating menu ready for a finger gesture')
     def shortcut_center(label):
-        node=next(n for n in ET.fromstring(xml).iter('node') if n.get('text','')==label or n.get('content-desc','')==label)
+        node=next(n for n in ET.fromstring(xml).iter('node') if n.get('clickable')=='true' and (n.get('text','')==label or n.get('content-desc','')==label))
         x1,y1,x2,y2=map(int,re.findall(r'-?\d+',node.get('bounds')))
         return (x1+x2)//2,(y1+y2)//2
     sx,sy=shortcut_center('Comunidade');ex,ey=shortcut_center('Mapa')
