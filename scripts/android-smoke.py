@@ -1,5 +1,6 @@
 """Exercise the packaged app and its real Android overlay above the launcher."""
 import re
+import os
 import xml.etree.ElementTree as ET
 import subprocess
 import time
@@ -219,6 +220,17 @@ try:
     services=shell('dumpsys','activity','services','com.amora.app')
     assert 'OverlayService' not in services
     print('PASS: dropping bubble on X disables its service',flush=True)
+
+    if os.environ.get('GITHUB_REF') == 'refs/heads/main':
+        shell('run-as','com.amora.app','mkdir','-p','files/amora-web-v1/active')
+        subprocess.run(['adb','shell','run-as','com.amora.app','tee','files/amora-web-v1/active/web-update.json'],input='{"id":"previous-test-version"}',text=True,capture_output=True,check=True)
+        evaluate('main', "window.AmoraAndroid.checkWebUpdate()")
+        xml=wait_ui(lambda x:'Atualizar agora' in x,'new web bundle is offered inside the installed Android app')
+        click_ui(xml,lambda n:n.get('text','')=='Atualizar agora')
+        wait_ui(lambda x:'Baixando' not in x and 'Comunidade' in x,'web update returns to the application without reinstalling APK')
+        evaluate('main', "(()=>{const d=JSON.parse(window.AmoraAndroid.webVersion());if(!/^[a-f0-9]{64}$/.test(d.id))throw Error('Downloaded bundle was not activated');return 'Verified downloaded web bundle active without APK reinstall';})()")
+        screenshot('updated')
+
 
 finally:
     screenshot('final')
