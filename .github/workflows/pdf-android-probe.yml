@@ -26,6 +26,10 @@ jobs:
           name: Cinema-Library-build
           run-id: 40541814616
           github-token: ${{ github.token }}
+      - name: Prepare the pinned Android compatibility parser
+        run: |
+          curl -fsSL 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/legacy/build/pdf.min.mjs' -o pdf-compat-main.js
+          curl -fsSL 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/legacy/build/pdf.worker.min.mjs' -o pdf-compat-worker.js
       - run: if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
       - uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -34,6 +38,11 @@ jobs:
           disable-animations: true
           script: |
             adb install android/app/build/outputs/apk/debug/app-debug.apk
+            adb push pdf-compat-main.js /data/local/tmp/amora-pdf-main.js
+            adb push pdf-compat-worker.js /data/local/tmp/amora-pdf-worker.js
+            adb shell run-as com.amora.app mkdir -p files/amora-web-v1/active/pdfjs
+            adb shell run-as com.amora.app cp /data/local/tmp/amora-pdf-main.js files/amora-web-v1/active/pdfjs/pdf.min.js
+            adb shell run-as com.amora.app cp /data/local/tmp/amora-pdf-worker.js files/amora-web-v1/active/pdfjs/pdf.worker.min.js
             adb shell am start -W -n com.amora.app/.MainActivity
             adb shell input keyevent 82
             python scripts/pdf-android-probe.py
