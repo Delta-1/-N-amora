@@ -211,12 +211,47 @@ try:
     photos=shell('content','query','--uri','content://media/external/images/media','--projection','_display_name:relative_path')
     assert 'namora-smoke-photo.jpg' in photos and 'Pictures/NAMORA' in photos
     print('PASS: captured JPEG exists in gallery Pictures/NAMORA',flush=True)
-    for label, title in [('Conversa','Seu amor, logo aqui.'),('Nosso bolso','Dividir também é cuidar.'),('Jogos','Um tempinho para brincar.'),('Desenho','Memórias em cada traço.'),('Notas','O que a gente imagina junto.'),('Agenda','Tempo para o que importa.'),('Nossa história','Os dias que viraram nós.'),('Combinados','Pequenos planos, juntos.'),('Ideias','Boas ideias, lindas memórias.'),('Arquivos','Nossos arquivos'),('Álbum','Nossas lembranças')]:
+    for label, title in [('Conversa','Seu amor, logo aqui.'),('Nosso bolso','Dividir também é cuidar.'),('Jogos','Um tempinho para brincar.'),('Desenho','Memórias em cada traço.'),('Notas','O que a gente imagina junto.'),('Agenda','Tempo para o que importa.'),('Nossa história','Os dias que viraram nós.'),('Combinados','Pequenos planos, juntos.'),('Ideias','Boas ideias, lindas memórias.'),('Arquivos','Nossos arquivos'),('Álbum','Nossas lembranças'),('Cinema','Cinema'),('Biblioteca','Biblioteca do casal')]:
         evaluate('main', "document.querySelector('.corner-apps').click()")
         wait_ui(lambda x: 'Aplicativos' in x and 'Organizar' in x, 'drawer is ready for '+label)
         import json
         evaluate('main', "Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==="+json.dumps(label)+").click()")
         wait_ui(lambda x: title in x, 'menu opens '+label)
+
+    # Request real MediaProjection consent on the clean emulator, not a mocked stream.
+    evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'cinema'}}));window.__cinemaFrames=0;window.__cinemaCancelled=false;window.__cinemaNativeTest=e=>{if(e.detail.cinemaFrame)window.__cinemaFrames++;if(e.detail.cinemaError)window.__cinemaCancelled=true;};window.addEventListener('amora-native',window.__cinemaNativeTest);window.AmoraAndroid.cinemaShare()")
+    wait_ui(lambda x: ('Start' in x or 'Share' in x or 'Compartilhar' in x) and 'com.android.systemui' in x, 'Cinema requests Android screen-sharing consent')
+    shell('input','keyevent','KEYCODE_BACK')
+    time.sleep(1)
+    evaluate('main', "(()=>{if(!window.__cinemaCancelled)throw Error('Screen permission cancellation was not reported');if(window.__cinemaFrames)throw Error('Frames captured without consent');return 'Screen capture cancellation never transmits a frame';})()")
+    evaluate('main', "window.AmoraAndroid.cinemaShare()")
+    xml=wait_ui(lambda x: ('Start' in x or 'Share' in x or 'Compartilhar' in x) and 'com.android.systemui' in x, 'Cinema asks for fresh consent for each session')
+    # Android 15 offers a single-app/entire-screen chooser.
+    options=[n for n in ET.fromstring(xml).iter('node') if n.get('text','').casefold() in ('a single app','single app','one app','um app','um único app')]
+    if options:
+        click_ui(xml,lambda n:n in options or n.get('text','').casefold() in ('a single app','single app','one app','um app','um único app'))
+        xml=wait_ui(lambda x:'Entire screen' in x or 'Tela inteira' in x,'screen-sharing scope chooser opens')
+        click_ui(xml,lambda n:n.get('text','').casefold() in ('entire screen','tela inteira'))
+        xml=wait_ui(lambda x:('Start' in x or 'Share' in x) and 'com.android.systemui' in x,'entire-screen sharing is selected')
+    click_ui(xml,lambda n:n.get('resource-id','')=='android:id/button1' or n.get('text','').casefold() in ('start now','start','share screen','iniciar agora','iniciar','compartilhar tela'))
+    for _ in range(15):
+        try:
+            count=int(evaluate('main','window.__cinemaFrames'))
+            if count>0:break
+        except (AssertionError,ValueError):
+            pass
+        time.sleep(1)
+    assert int(evaluate('main','window.__cinemaFrames'))>0
+    assert 'CinemaCaptureService' in shell('dumpsys','activity','services','com.amora.app')
+    print('PASS: Android MediaProjection supplies real Cinema frames after explicit consent',flush=True)
+    screenshot('cinema-sharing')
+    evaluate('main','window.AmoraAndroid.stopCinemaShare()')
+    time.sleep(1)
+    assert 'CinemaCaptureService' not in shell('dumpsys','activity','services','com.amora.app')
+    evaluate('main',"window.removeEventListener('amora-native',window.__cinemaNativeTest)")
+    print('PASS: stopping Cinema releases the screen-sharing foreground service',flush=True)
+    # The locally packaged PDF engine must load in Android without an external document viewer.
+    evaluate('main',"(async()=>{const pdf=await import('./pdfjs/pdf.min.js');pdf.GlobalWorkerOptions.workerSrc=new URL('./pdfjs/pdf.worker.min.js',location.href).href;if(!pdf.getDocument)throw Error('PDF reader unavailable');return 'Local PDF reader module loads in Android WebView';})()")
 
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'chat'}}))")
     wait_ui(lambda x: 'Voltar das mensagens' in x and 'Só vocês dois' in x, 'partner chat opens as its own screen')
