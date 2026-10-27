@@ -1,5 +1,6 @@
 """Exercise the packaged app and its real Android overlay above the launcher."""
 import re
+import os
 import xml.etree.ElementTree as ET
 import subprocess
 import time
@@ -144,7 +145,7 @@ try:
     screenshot('main-export-complete')
     # Exercise the actual app drawer and map without requiring account credentials.
     evaluate('main', "document.querySelector('.explore-button').click()")
-    wait_ui(lambda x: 'Nosso canto' in x and 'Apps' in x, 'demo enters the complete mobile shell')
+    wait_ui(lambda x: 'Comunidade' in x and 'Apps' in x, 'demo enters the complete mobile shell')
     evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
     xml = wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'Apps drawer opens all routes')
     evaluate('main', "(()=>{const map=Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==='Mapa').getBoundingClientRect();if(map.height<30||map.top<0||map.bottom>innerHeight)throw Error('Map shortcut is clipped by the drawer');return 'Map shortcut fits the visible drawer';})()")
@@ -156,7 +157,7 @@ try:
     shell('input','swipe',str(x),str(y),str(x),str(y+35),'550')
     wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'short drawer drag returns to its open position')
     shell('input','swipe',str(x),str(y),str(x),str(y+310),'450')
-    wait_ui(lambda x: 'Aplicativos' not in x and 'Nosso canto' in x, 'long drawer drag dismisses to the previous screen')
+    wait_ui(lambda x: 'Aplicativos' not in x and 'Comunidade' in x, 'long drawer drag dismisses to the previous screen')
     evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
     xml=wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'drawer reopens after a drag dismissal')
     click_ui(xml, lambda n: n.get('text', '') == 'Mapa')
@@ -168,7 +169,7 @@ try:
     evaluate('main', "Array.from(document.querySelectorAll('.map-tool-tabs button')).find(x=>x.textContent==='Lugares').click()")
     wait_ui(lambda x: 'Nossos lugares' in x and 'Marcar no mapa' in x, 'places open in the bottom tools panel')
     evaluate('main', "Array.from(document.querySelectorAll('.map-tool-tabs button')).find(x=>x.textContent==='Passos').click()")
-    wait_ui(lambda x: 'Mês dos passos' in x and 'Sem registros' in x, 'step summary opens from map shortcut')
+    wait_ui(lambda x: 'Passos do mês' in x and 'Sem registros' in x, 'step summary opens from map shortcut')
     evaluate('main', "Array.from(document.querySelectorAll('.map-tool-tabs button')).find(x=>x.textContent==='GPS').click()")
     xml=wait_ui(lambda x: 'Nosso GPS' in x and 'Recolher informações do mapa' in x, 'GPS controls open without leaving the map')
     node=next(n for n in ET.fromstring(xml).iter('node') if n.get('content-desc','')=='Recolher informações do mapa')
@@ -176,12 +177,12 @@ try:
     shell('input','swipe',str((x1+x2)//2),str((y1+y2)//2),str((x1+x2)//2),str((y1+y2)//2+130),'500')
     wait_ui(lambda x: 'Expandir informações do mapa' in x, 'map sheet follows a downward drag and collapses')
     evaluate('main', "document.querySelector('[aria-label=\"Entrar com código no vínculo\"]').click()")
-    wait_ui(lambda x: 'Um login para cada um' in x, 'join code shortcut requires sign-in before linking')
+    wait_ui(lambda x: 'Um código, um novo encontro' in x, 'join code shortcut requires sign-in before linking')
     shell('input','keyevent','KEYCODE_BACK')
     wait_ui(lambda x: 'Voltar do mapa' in x, 'closing invitation returns to the map')
     evaluate('main', "document.querySelector('[aria-label=\"Voltar do mapa\"]').click()")
     wait_ui(lambda x: 'A vida fica mais bonita' in x and 'Apps' in x, 'map back returns to the home screen')
-    evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Câmera').click()")
+    evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'camera'}}))")
     wait_ui(lambda x: 'Personalizar foto' in x and 'Tirar foto' in x, 'camera opens directly from bottom navigation')
     evaluate('main', "(()=>{const b=document.querySelector('.camera-controls').getBoundingClientRect();if(b.bottom>innerHeight-60||b.top<0)throw Error('Camera controls require scrolling');return 'Camera controls fit the viewport';})()")
     screenshot('camera')
@@ -219,6 +220,17 @@ try:
     services=shell('dumpsys','activity','services','com.amora.app')
     assert 'OverlayService' not in services
     print('PASS: dropping bubble on X disables its service',flush=True)
+
+    if os.environ.get('GITHUB_REF') == 'refs/heads/main':
+        shell('run-as','com.amora.app','mkdir','-p','files/amora-web-v1/active')
+        subprocess.run(['adb','shell','run-as','com.amora.app','tee','files/amora-web-v1/active/web-update.json'],input='{"id":"previous-test-version"}',text=True,capture_output=True,check=True)
+        evaluate('main', "window.AmoraAndroid.checkWebUpdate()")
+        xml=wait_ui(lambda x:'Atualizar agora' in x,'new web bundle is offered inside the installed Android app')
+        click_ui(xml,lambda n:n.get('text','')=='Atualizar agora')
+        wait_ui(lambda x:'Baixando' not in x and 'Comunidade' in x,'web update returns to the application without reinstalling APK')
+        evaluate('main', "(()=>{const d=JSON.parse(window.AmoraAndroid.webVersion());if(!/^[a-f0-9]{64}$/.test(d.id))throw Error('Downloaded bundle was not activated');return 'Verified downloaded web bundle active without APK reinstall';})()")
+        screenshot('updated')
+
 
 finally:
     screenshot('final')

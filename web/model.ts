@@ -27,6 +27,7 @@ export type State = {
     user: {
         userId: string;
         displayName: string;
+        isAdmin?: boolean;
     };
     couple: {
         id: string;

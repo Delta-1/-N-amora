@@ -15,6 +15,10 @@ public class NativeBridge {
  static void flush(WebView w){if(pending.isEmpty())return;String data=pending;pending="";deliver(w,data);}
  static void deliver(WebView w,String data){w.evaluateJavascript("window.__amoraPending="+data+";window.dispatchEvent(new CustomEvent('amora-native',{detail:"+data+"}))",null);}
  void launch(String action){main.post(()->{boolean fromOverlay=!(context instanceof Activity);if(fromOverlay)OverlayService.hidePanel();context.startActivity(new Intent(context,MainActivity.class).setAction(action).putExtra("fromOverlay",fromOverlay).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP));});}
+ @JavascriptInterface public void checkWebUpdate(){WebUpdates.check(context);}
+ @JavascriptInterface public void installWebUpdate(){WebUpdates.install(context);}
+ @JavascriptInterface public void webReady(){WebUpdates.ready(context);}
+ @JavascriptInterface public String webVersion(){return WebUpdates.current(context).toString();}
  @JavascriptInterface public void biometric(boolean enabled){main.post(()->{if(context instanceof MainActivity)((MainActivity)context).deviceLock.authenticate(enabled?1:-1,()->{});});}
  @JavascriptInterface public void overlay(boolean on){context.getSharedPreferences("amora",0).edit().putBoolean("overlayEnabled",on).apply();if(on)launch("amora.overlay");else context.stopService(new Intent(context,OverlayService.class));}
  @JavascriptInterface public void openApp(String route){if(!java.util.Arrays.asList("home","chat","expenses","camera","album","files","apps","lilith","games","paint","notes","agenda","history","ideas","lists","map").contains(route))return;main.post(()->{context.startActivity(new Intent(context,MainActivity.class).putExtra("route",route).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP));OverlayService.hidePanel();});}

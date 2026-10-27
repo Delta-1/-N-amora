@@ -4,7 +4,7 @@
  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
  <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false"/>
- <uses-permission android:name="android.permission.CAMERA"/>
+ <uses-permission android:name="android.permission.CAMERA"/><uses-permission android:name="android.permission.RECORD_AUDIO"/>
  <uses-feature android:name="android.hardware.camera" android:required="false"/>
  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -20,6 +20,8 @@
    <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
    <intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="amora" android:host="invite"/></intent-filter>
    <intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="amora" android:host="drive-callback"/></intent-filter>
+   <intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="amora" android:host="auth-callback"/></intent-filter>
+   <intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="amora" android:host="music-callback"/></intent-filter>
   </activity>
   <service android:name=".TrackingService" android:exported="false" android:stopWithTask="false" android:foregroundServiceType="location|health"/>
   <service android:name=".OverlayService" android:stopWithTask="false" android:exported="false" android:foregroundServiceType="specialUse"><property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-enabled Lilith floating assistant; visible draggable bubble and explicit stop action"/></service>
