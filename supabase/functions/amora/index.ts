@@ -18,7 +18,7 @@ Deno.serve(async req=>{
  const cid=member.couple_id;const raw=await req.text();if(raw.length>6000000)return reply({error:'Conteúdo muito grande.'},413);const body=JSON.parse(raw);
  const accessClient=createClient(url,Deno.env.get('SUPABASE_ANON_KEY')||secret,{global:{headers:{Authorization:'Bearer '+token}},auth:{persistSession:false}});const access=await accessClient.rpc('namora_access');const admin=access.data?.administrator===true;
  const aiActions=['status','save-key','remove-key','chat','image-generate','academic','save-voice','remove-voice','voice'];if(aiActions.includes(body.action)&&!admin)return reply({error:'Lilith está disponível somente ao administrador geral. Os planos para outras contas serão anunciados depois.'},403);
- const integration=await handleIntegration(body,{db,cid,uid:user.id,encrypt,decrypt,reply});if(integration)return integration;
+ const integration=await handleIntegration(body,{db,cid,uid:user.id,encrypt,decrypt,reply,admin});if(integration)return integration;
  const check=(r:any)=>{if(r.error)throw Error('Não foi possível salvar. Tente novamente.');return r.data;};
  if(body.action==='game'){
   const kind=body.kind;if(!['tic','checkers','chess'].includes(kind))return reply({error:'Jogo inválido.'},400);

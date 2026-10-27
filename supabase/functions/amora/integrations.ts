@@ -1,5 +1,5 @@
 import {driveLibrary} from './drive-library.ts';
-type Context={db:any;cid:string;uid:string;encrypt:(s:string)=>Promise<string>;decrypt:(s:string)=>Promise<string>;reply:(body:unknown,status?:number)=>Response};
+type Context={db:any;cid:string;uid:string;encrypt:(s:string)=>Promise<string>;decrypt:(s:string)=>Promise<string>;reply:(body:unknown,status?:number)=>Response;admin?:boolean};
 const redirectUri='https://delta-1.github.io/-N-amora/docs/drive-callback.html';
 const actions=['integrations-status','save-voice','remove-voice','voice','drive-config','drive-connect','drive-complete','drive-disconnect','drive-backup','delete-file'];
 class InputError extends Error{constructor(message:string,public status=400){super(message);}}

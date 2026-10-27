@@ -1,4 +1,4 @@
-type Context={db:any;cid:string;uid:string;encrypt:(s:string)=>Promise<string>;decrypt:(s:string)=>Promise<string>;reply:(b:unknown,s?:number)=>Response};
+type Context={db:any;cid:string;uid:string;encrypt:(s:string)=>Promise<string>;decrypt:(s:string)=>Promise<string>;reply:(b:unknown,s?:number)=>Response;admin?:boolean};
 const redirectUri='https://delta-1.github.io/-N-amora/docs/drive-callback.html';
 const check=(r:any)=>{if(r.error)throw Error('Não foi possível atualizar a biblioteca.');return r.data;};
 const need=(v:any,m:string)=>{if(!v)throw Error(m);};
@@ -15,17 +15,20 @@ export async function driveLibrary(body:any,c:Context):Promise<Response|null>{
  // Preserve the original shared connection until its owner reconnects explicitly.
  if(d.refreshToken){d.accounts={...d.accounts,legacy:{accessToken:d.accessToken,refreshToken:d.refreshToken,expiresAt:d.expiresAt,folderId:d.folderId,label:'Drive conectado anteriormente'}};d.active=d.active||'legacy';delete d.refreshToken;delete d.accessToken;delete d.expiresAt;delete d.folderId;}
  d.accounts||={};
+ const globalRow=check(await db.from('namora_drive_app').select('ciphertext').eq('id',true).maybeSingle());
+ if(globalRow){const globalClient=JSON.parse(await decrypt(globalRow.ciphertext));d.clientId=globalClient.clientId;d.clientSecret=globalClient.clientSecret;}
  const save=async()=>{const value={ciphertext:await encrypt(JSON.stringify(d)),updated_at:new Date().toISOString()};const r=revision?check(await db.from('namora_integrations').update(value).eq('couple_id',cid).eq('provider','drive').eq('updated_at',revision).select('updated_at').maybeSingle()):check(await db.from('namora_integrations').insert({...value,couple_id:cid,provider:'drive'}).select('updated_at').single());need(r,'O Drive mudou em outra tela. Tente novamente.');revision=r.updated_at;};
  const members=check(await db.from('namora_members').select('user_id,name').eq('couple_id',cid));
  // Connections left by a former member are never used for new uploads.
  const allowed=(id:string)=>id==='legacy'||members.some((m:any)=>m.user_id===id);
- const status=()=>{const active=allowed(d.active)?d.accounts[d.active]:null;return{configured:!!d.clientId,connected:!!active?.refreshToken,owner:active?d.active:null,folderId:active?.folderId||null,sheetId:active?.sheetId||null,redirectUri,accounts:Object.entries(d.accounts).filter(([id])=>allowed(id)).map(([id,a]:[string,any])=>({id,label:a.label||members.find((m:any)=>m.user_id===id)?.name||'Google Drive',email:a.email||'',selected:id===d.active,canDisconnect:id===uid||id==='legacy'}))};};
+ const status=()=>{const active=allowed(d.active)?d.accounts[d.active]:null;return{canConfigure:c.admin===true,configured:!!d.clientId,connected:!!active?.refreshToken,owner:active?d.active:null,folderId:active?.folderId||null,sheetId:active?.sheetId||null,redirectUri,accounts:Object.entries(d.accounts).filter(([id])=>allowed(id)).map(([id,a]:[string,any])=>({id,label:a.label||members.find((m:any)=>m.user_id===id)?.name||'Google Drive',email:a.email||'',selected:id===d.active,canDisconnect:id===uid||id==='legacy'}))};};
  try{
  if(body.action==='drive-status')return reply(status());
  if(body.action==='drive-config'){
+ need(c.admin===true,'Somente o administrador geral pode configurar o aplicativo Google.');
  const clientId=String(body.clientId||'').trim(),clientSecret=String(body.clientSecret||'').trim();
  need(/^[A-Za-z0-9._-]+\.apps\.googleusercontent\.com$/.test(clientId)&&clientId.length<300&&clientSecret.length>=8&&clientSecret.length<=500,'Confira as credenciais OAuth do Google.');
- d={clientId,clientSecret,accounts:{}};await save();return reply({ok:true});
+ check(await db.from('namora_drive_app').upsert({id:true,ciphertext:await encrypt(JSON.stringify({clientId,clientSecret})),updated_at:new Date().toISOString()}));return reply({ok:true});
  }
  if(body.action==='drive-select'){
  const owner=String(body.owner||'');need(allowed(owner)&&d.accounts[owner]?.refreshToken,'Este Drive não está conectado ao vínculo.');d.active=owner;await save();return reply({ok:true});
@@ -49,7 +52,7 @@ export async function driveLibrary(body:any,c:Context):Promise<Response|null>{
  need(about.ok,'Não foi possível identificar o Drive autorizado.');const info=(await about.json()).user;
  // Reauthorizing the same account preserves its folder and catalogue.
  const old=d.accounts[uid],same=old?.email&&old.email===info?.emailAddress;
- d.accounts[uid]={...(same?old:{}),accessToken:token.access_token,refreshToken:token.refresh_token,expiresAt:Date.now()+token.expires_in*1000,email:info?.emailAddress||'',label:(members.find((m:any)=>m.user_id===uid)?.name||info?.displayName||'Meu Drive')+' · Google Drive'};
+ d.accounts[uid]={...(same?old:{}),clientId:d.clientId,clientSecret:d.clientSecret,accessToken:token.access_token,refreshToken:token.refresh_token,expiresAt:Date.now()+token.expires_in*1000,email:info?.emailAddress||'',label:(members.find((m:any)=>m.user_id===uid)?.name||info?.displayName||'Meu Drive')+' · Google Drive'};
  d.active=uid;await save();return reply({ok:true});
  }
  if(body.action!=='drive-backup')return reply({error:'Ação de Drive inválida.'},400);
@@ -58,7 +61,7 @@ export async function driveLibrary(body:any,c:Context):Promise<Response|null>{
  const lease=check(await db.rpc('namora_drive_lock',{file_id:f.id,target:cid}));need(lease,'Este arquivo já está sincronizando. Aguarde.');
  try{
  if(!a.accessToken||a.expiresAt<Date.now()+60000){
- const r=await request('https://oauth2.googleapis.com/token',{method:'POST',body:new URLSearchParams({client_id:d.clientId,client_secret:d.clientSecret,refresh_token:a.refreshToken,grant_type:'refresh_token'})});
+ const r=await request('https://oauth2.googleapis.com/token',{method:'POST',body:new URLSearchParams({client_id:a.clientId||d.clientId,client_secret:a.clientSecret||d.clientSecret,refresh_token:a.refreshToken,grant_type:'refresh_token'})});
  need(r.ok,'Reconecte o Drive selecionado.');const t=await r.json();Object.assign(a,{accessToken:t.access_token,expiresAt:Date.now()+t.expires_in*1000});await save();
  }
  const headers={Authorization:'Bearer '+a.accessToken};

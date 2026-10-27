@@ -1,5 +1,9 @@
 begin;
 -- Additive: existing apps, buckets and couple records are preserved.
+create table if not exists public.namora_drive_app(id boolean primary key default true check(id),ciphertext text not null,updated_at timestamptz not null default now());
+alter table public.namora_drive_app enable row level security;
+revoke all on public.namora_drive_app from public,anon,authenticated;
+grant all on public.namora_drive_app to service_role;
 alter table public.namora_files add column if not exists taken_at timestamptz;
 alter table public.namora_files add column if not exists drive_owner text;
 alter table public.namora_files add column if not exists catalogued_at timestamptz;
