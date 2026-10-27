@@ -8,17 +8,17 @@
   "scripts": {
     "install:ci": "bash scripts/install-pnpm.sh",
     "dev": "vite --config vite.pages.config.ts",
-    "build": "node scripts/build-pages.mjs",
+    "build": "node scripts/prepare-pdf.mjs && node scripts/build-pages.mjs",
     "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "dev:sites": "node scripts/run-framework.mjs dev",
     "build:sites": "node scripts/run-framework.mjs build",
-    "build:pages": "node scripts/build-pages.mjs",
+    "build:pages": "node scripts/prepare-pdf.mjs && node scripts/build-pages.mjs",
     "preview": "vite preview --config vite.pages.config.ts",
     "test:pages": "node --test tests/pages.test.mjs",
     "test:supabase": "node tests/supabase.test.mjs",
-    "test:app": "node --test tests/app.test.mjs tests/mobile.test.mjs tests/invitation.test.mjs tests/map.test.mjs tests/rotary.test.mjs tests/auth-redirect.test.mjs && node tests/app-rls.test.mjs && node tests/safety.test.mjs && node tests/community.test.mjs && node tests/calls.test.mjs"
+    "test:app": "node --test tests/app.test.mjs tests/mobile.test.mjs tests/invitation.test.mjs tests/map.test.mjs tests/rotary.test.mjs tests/auth-redirect.test.mjs && node tests/app-rls.test.mjs && node tests/safety.test.mjs && node tests/community.test.mjs && node tests/calls.test.mjs && node --test tests/cinema-model.test.mjs && node tests/cinema-library.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

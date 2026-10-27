@@ -25,6 +25,7 @@
   </activity>
   <service android:name=".TrackingService" android:exported="false" android:stopWithTask="false" android:foregroundServiceType="location|health"/>
   <service android:name=".OverlayService" android:stopWithTask="false" android:exported="false" android:foregroundServiceType="specialUse"><property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-enabled Lilith floating assistant; visible draggable bubble and explicit stop action"/></service>
+  <service android:name=".CinemaCaptureService" android:exported="false" android:stopWithTask="true" android:foregroundServiceType="mediaProjection"/>
   <service android:name=".CaptureService" android:exported="false" android:foregroundServiceType="mediaProjection"/>
   <receiver android:name=".ReminderReceiver" android:exported="false"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter></receiver>
  </application>

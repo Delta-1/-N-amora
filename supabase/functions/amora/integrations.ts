@@ -1,3 +1,4 @@
+import {driveLibrary} from './drive-library.ts';
 type Context={db:any;cid:string;uid:string;encrypt:(s:string)=>Promise<string>;decrypt:(s:string)=>Promise<string>;reply:(body:unknown,status?:number)=>Response};
 const redirectUri='https://delta-1.github.io/-N-amora/docs/drive-callback.html';
 const actions=['integrations-status','save-voice','remove-voice','voice','drive-config','drive-connect','drive-complete','drive-disconnect','drive-backup','delete-file'];
@@ -9,13 +10,13 @@ const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toSt
 const hash=async(s:string)=>new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)));
 const hex=(v:Uint8Array)=>Array.from(v,n=>n.toString(16).padStart(2,'0')).join('');
 const external=(url:string,options:RequestInit={})=>fetch(url,{...options,redirect:'error',signal:AbortSignal.timeout(45000)});
-export async function handleIntegration(body:any,c:Context):Promise<Response|null>{if(!actions.includes(body.action))return null;const {db,cid,uid,encrypt,decrypt,reply}=c;
+export async function handleIntegration(body:any,c:Context):Promise<Response|null>{if(String(body.action).startsWith('drive-'))return await driveLibrary(body,c);if(!actions.includes(body.action))return null;const {db,cid,uid,encrypt,decrypt,reply}=c;
  const read=async(provider:string)=>{const row=check(await db.from('namora_integrations').select('ciphertext,updated_at').eq('couple_id',cid).eq('provider',provider).maybeSingle());return row?{...JSON.parse(await decrypt(row.ciphertext)),_revision:row.updated_at}:null;};
  const write=async(provider:string,value:any)=>{const {_revision,...data}=value,row={ciphertext:await encrypt(JSON.stringify(data)),updated_at:new Date().toISOString()};let result;if(_revision){result=check(await db.from('namora_integrations').update(row).eq('couple_id',cid).eq('provider',provider).eq('updated_at',_revision).select('updated_at').maybeSingle());assert(result,'A configuração mudou. Abra novamente e tente outra vez.',409);}else result=check(await db.from('namora_integrations').upsert({...row,couple_id:cid,provider}).select('updated_at').single());value._revision=result.updated_at;};
  const pair=async()=>{const r=await db.from('namora_members').select('user_id',{head:true,count:'exact'}).eq('couple_id',cid);if(r.error)throw Error('Database error');assert(r.count===2,'Convide seu amor antes de configurar a voz da Lilith.',403);};
  const budget=async()=>{const r=await db.rpc('namora_ai_budget',{target:cid});assert(!r.error&&r.data,'Muitos pedidos. Aguarde um minuto.',429);};
  try{
- if(body.action==='integrations-status'){const voice=await read('voice'),drive=await read('drive');return reply({voice:{ready:!!voice,voiceId:voice?.voiceId||'',model:voice?.model||'eleven_multilingual_v2'},drive:{configured:!!drive?.clientId,connected:!!drive?.refreshToken,folderId:drive?.folderId||null,redirectUri}});}
+ if(body.action==='integrations-status'){const voice=await read('voice'),driveResponse=await driveLibrary({action:'drive-status'},c),drive=await driveResponse!.json();return reply({voice:{ready:!!voice,voiceId:voice?.voiceId||'',model:voice?.model||'eleven_multilingual_v2'},drive});}
  if(body.action==='delete-file'){const file=check(await db.from('namora_files').select('id,path').eq('couple_id',cid).eq('id',body.id).maybeSingle());assert(file,'Arquivo não encontrado.',404);check(await db.storage.from('amora-private').remove([file.path]));check(await db.from('namora_files').delete().eq('couple_id',cid).eq('id',file.id));return reply({ok:true});}
  if(body.action==='remove-voice'){await pair();check(await db.from('namora_integrations').delete().eq('couple_id',cid).eq('provider','voice'));return reply({ok:true});}
  if(body.action==='drive-disconnect'){check(await db.from('namora_integrations').delete().eq('couple_id',cid).eq('provider','drive'));check(await db.from('namora_files').update({drive_id:null,drive_at:null}).eq('couple_id',cid));return reply({ok:true});}
