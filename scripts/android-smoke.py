@@ -147,6 +147,12 @@ try:
     # Exercise the actual app drawer and map without requiring account credentials.
     evaluate('main', "document.querySelector('.explore-button').click()")
     wait_ui(lambda x: 'Comunidade' in x and 'Apps' in x, 'demo enters the complete mobile shell')
+    evaluate('main', "(()=>{if(!document.querySelector('.corner-menu').classList.contains('is-collapsed')||document.querySelector('.corner-profile'))throw Error('Menu should start compact');document.querySelector('.corner-apps').click();})()")
+    wait_ui(lambda x:'Nosso perfil' in x,'one tap reveals the wheel and profile')
+    evaluate('main', "document.querySelector('.corner-apps').click()")
+    time.sleep(.3)
+    evaluate('main', "(()=>{if(document.querySelector('.corner-profile'))throw Error('Second tap did not hide profile');document.querySelector('.corner-apps').click();})()")
+    wait_ui(lambda x:'Nosso perfil' in x,'a new tap reopens the shortcuts')
     evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(getComputedStyle(c).display==='none')throw Error('Rotating menu missing');const buttons=Array.from(c.querySelectorAll('[data-visible=true]'));if(buttons.length!==3||buttons.some(x=>{const r=x.getBoundingClientRect();return r.width<40||r.left<0||r.right>innerWidth||r.bottom>innerHeight;}))throw Error('Rotating shortcuts clipped');return 'Three rotating shortcuts fit the phone';})()")
     xml=wait_ui(lambda x:'Menu giratório' in x and 'Comunidade' in x,'rotating menu ready for a finger gesture')
     import json
@@ -164,7 +170,7 @@ try:
     screenshot('rotating-menu')
     evaluate('main', "document.querySelector('.corner-menu').dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true}))")
     screenshot('community')
-    evaluate('main', "document.querySelector('.corner-apps').click()")
+    evaluate('main', "document.querySelector('.corner-apps').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}))")
     xml = wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'Apps drawer opens all routes')
     evaluate('main', "(()=>{const map=Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==='Mapa').getBoundingClientRect();if(map.height<30||map.top<0||map.bottom>innerHeight)throw Error('Map shortcut is clipped by the drawer');return 'Map shortcut fits the visible drawer';})()")
     import json
@@ -176,7 +182,7 @@ try:
     wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'short drawer drag returns to its open position')
     shell('input','swipe',str(x),str(y),str(x),str(y+310),'450')
     wait_ui(lambda x: 'Aplicativos' not in x and 'Comunidade' in x, 'long drawer drag dismisses to the previous screen')
-    evaluate('main', "document.querySelector('.corner-apps').click()")
+    evaluate('main', "document.querySelector('.corner-apps').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}))")
     xml=wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'drawer reopens after a drag dismissal')
     click_ui(xml, lambda n: n.get('text', '') == 'Mapa')
     wait_ui(lambda x: 'Mapa com a posição' in x and 'Quem está por perto' in x, 'map opens before any GPS position is available')
@@ -202,7 +208,7 @@ try:
     wait_ui(lambda x: 'A vida fica mais bonita' in x and 'Apps' in x, 'map back returns to the home screen')
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'camera'}}))")
     wait_ui(lambda x: 'Personalizar foto' in x and 'Tirar foto' in x, 'camera opens directly from bottom navigation')
-    evaluate('main', "(()=>{const b=document.querySelector('.camera-controls').getBoundingClientRect();if(b.bottom>innerHeight-60||b.top<0)throw Error('Camera controls require scrolling');return 'Camera controls fit the viewport';})()")
+    evaluate('main', "(()=>{const b=document.querySelector('.camera-controls').getBoundingClientRect();if(b.bottom>innerHeight||b.top<0||document.querySelector('.camera-preview').getBoundingClientRect().height<innerHeight-2)throw Error('Camera controls require scrolling');return 'Camera controls fit the viewport';})()")
     screenshot('camera')
     evaluate('main', "document.querySelector('[aria-label=\"Personalizar foto\"]').click()")
     wait_ui(lambda x: 'Marca na foto' in x and 'Salvar também no celular' in x, 'camera customization opens without scrolling the camera')
@@ -212,12 +218,21 @@ try:
     photos=shell('content','query','--uri','content://media/external/images/media','--projection','_display_name:relative_path')
     assert 'namora-smoke-photo.jpg' in photos and 'Pictures/NAMORA' in photos
     print('PASS: captured JPEG exists in gallery Pictures/NAMORA',flush=True)
-    for label, title in [('Conversa','Seu amor, logo aqui.'),('Nosso bolso','Dividir também é cuidar.'),('Jogos','Um tempinho para brincar.'),('Desenho','Memórias em cada traço.'),('Notas','O que a gente imagina junto.'),('Agenda','Tempo para o que importa.'),('Nossa história','Os dias que viraram nós.'),('Combinados','Pequenos planos, juntos.'),('Ideias','Boas ideias, lindas memórias.'),('Arquivos','Nossos arquivos'),('Álbum','Nossas lembranças'),('Cinema','Cinema'),('Biblioteca','Biblioteca do casal')]:
-        evaluate('main', "document.querySelector('.corner-apps').click()")
+    for label, title in [('Conversa','Seu amor, logo aqui.'),('Nosso bolso','Dividir também é cuidar.'),('Jogos','Um tempinho para brincar.'),('Desenho','Memórias em cada traço.'),('Notas','O que a gente imagina junto.'),('Agenda','Tempo para o que importa.'),('Nossa história','Os dias que viraram nós.'),('Combinados','Pequenos planos, juntos.'),('Ideias','Boas ideias, lindas memórias.'),('Arquivos','Nossos arquivos'),('Álbum','Nossas lembranças'),('Cinema','Cinema'),('Biblioteca','Biblioteca do casal'),('Status','Como está seu coração?'),('Ouvindo juntos','Ouvindo juntos')]:
+        evaluate('main', "document.querySelector('.corner-apps').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}))")
         wait_ui(lambda x: 'Aplicativos' in x and 'Organizar' in x, 'drawer is ready for '+label)
         import json
         evaluate('main', "Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==="+json.dumps(label)+").click()")
         wait_ui(lambda x: title in x, 'menu opens '+label)
+
+    shell('pm','grant','com.amora.app','android.permission.POST_NOTIFICATIONS')
+    evaluate('main', 'window.AmoraAndroid.testSOS()')
+    time.sleep(1)
+    notification_dump=shell('dumpsys','notification','--noredact')
+    assert 'amora-sos-vibrate-v1' in notification_dump and 'Teste do SOS neste aparelho' in notification_dump
+    print('PASS: SOS test produces a real private Android notification on the vibration channel',flush=True)
+    assert '"usageAllowed"' in evaluate('main','window.AmoraAndroid.deviceStatus()')
+    print('PASS: usage permission is independently reported without granting app access',flush=True)
 
     # Request real MediaProjection consent on the clean emulator, not a mocked stream.
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'cinema'}}));window.__cinemaFrames=0;window.__cinemaCancelled=false;window.__cinemaNativeTest=e=>{if(e.detail.cinemaFrame)window.__cinemaFrames++;if(e.detail.cinemaError)window.__cinemaCancelled=true;};window.addEventListener('amora-native',window.__cinemaNativeTest);window.AmoraAndroid.cinemaShare()")

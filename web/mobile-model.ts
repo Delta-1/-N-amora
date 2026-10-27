@@ -1,4 +1,4 @@
-export const appIds=['home','chat','expenses','album','camera','files','games','paint','notes','agenda','history','lists','ideas','map','lilith','community','profile','social-chat','music','whatsapp','about','admin','studio','cinema','library'] as const;
+export const appIds=['home','chat','expenses','album','camera','files','games','paint','notes','agenda','history','lists','ideas','map','lilith','community','profile','social-chat','music','whatsapp','about','admin','studio','cinema','library','status'] as const;
 export type AppId=typeof appIds[number];
 export type AppPreferences={dock:AppId[];order:AppId[];hidden:AppId[];overlay:string[]};
 export const defaults:AppPreferences={dock:['community','social-chat','map','profile'],order:[...appIds],hidden:[],overlay:['lilith','chat','apps']};
