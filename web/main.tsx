@@ -8,6 +8,7 @@ import './mobile.css';
 import './experience.css';
 import './social.css';
 import './x-layout.css';
+import './corner-layout.css';
 import {applyAppearance,type Appearance} from './mobile-model';
 applyAppearance((localStorage.getItem('amora.appearance.v1')||'dark') as Appearance);
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

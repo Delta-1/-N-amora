@@ -146,6 +146,8 @@ try:
     # Exercise the actual app drawer and map without requiring account credentials.
     evaluate('main', "document.querySelector('.explore-button').click()")
     wait_ui(lambda x: 'Comunidade' in x and 'Apps' in x, 'demo enters the complete mobile shell')
+    evaluate('main', "(()=>{const c=document.querySelector('.corner-menu'),d=document.querySelector('.mobile-dock');if(getComputedStyle(c).display!=='none'||getComputedStyle(d).display==='none')throw Error('Tablet menu replaced the phone navigation');const buttons=Array.from(d.querySelectorAll('button'));if(buttons.length!==5||buttons.some(x=>{const r=x.getBoundingClientRect();return r.width<30||r.left<0||r.right>innerWidth||r.bottom>innerHeight;}))throw Error('Phone shortcuts are clipped');return 'Phone keeps its five existing bottom shortcuts';})()")
+    screenshot('community')
     evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
     xml = wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'Apps drawer opens all routes')
     evaluate('main', "(()=>{const map=Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==='Mapa').getBoundingClientRect();if(map.height<30||map.top<0||map.bottom>innerHeight)throw Error('Map shortcut is clipped by the drawer');return 'Map shortcut fits the visible drawer';})()")
