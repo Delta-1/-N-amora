@@ -19,7 +19,7 @@ def screenshot(name):
 
 def wait_ui(predicate, label):
     for _ in range(15):
-        time.sleep(2)
+        time.sleep(0.5)
         try:
             dump = shell('uiautomator', 'dump', '/sdcard/amora.xml')
         except subprocess.CalledProcessError:
