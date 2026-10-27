@@ -172,7 +172,7 @@ try:
     wait_ui(lambda x: 'Passos do mês' in x and 'Sem registros' in x, 'step summary opens from map shortcut')
     evaluate('main', "Array.from(document.querySelectorAll('.map-tool-tabs button')).find(x=>x.textContent==='GPS').click()")
     xml=wait_ui(lambda x: 'Nosso GPS' in x and 'Recolher informações do mapa' in x, 'GPS controls open without leaving the map')
-    node=next(n for n in ET.fromstring(xml).iter('node') if n.get('content-desc','')=='Recolher informações do mapa')
+    node=next(n for n in ET.fromstring(xml).iter('node') if 'Recolher informações do mapa' in (n.get('content-desc','')+' '+n.get('text','')))
     x1,y1,x2,y2=map(int,re.findall(r'\d+',node.get('bounds')))
     shell('input','swipe',str((x1+x2)//2),str((y1+y2)//2),str((x1+x2)//2),str((y1+y2)//2+130),'500')
     wait_ui(lambda x: 'Expandir informações do mapa' in x, 'map sheet follows a downward drag and collapses')
