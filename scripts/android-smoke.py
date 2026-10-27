@@ -107,12 +107,6 @@ try:
     assert 'usageAllowed' in local_device and isinstance(local_device['screen'],bool) and isinstance(local_device['locked'],bool) and 0 <= local_device['battery'] <= 100 and local_device['connection'] in ['wifi','mobile','offline','ethernet','other']
     print('PASS: usage permission is independently reported without granting app access',flush=True)
 
-    evaluate('main', 'window.AmoraAndroid.youtube("M7lc1UVf-VE")')
-    wait_ui(lambda x:'voltar ao amora' in x.casefold(),'YouTube opens in its own native player screen')
-    evaluate('youtube', "(()=>{if(window.AmoraAndroid)throw Error('Provider page received native bridge');if(location.origin!=='https://com.amora.app')throw Error('YouTube app identity missing');if(!document.querySelector('script[src=\"https://www.youtube.com/iframe_api\"]'))throw Error('Official YouTube API missing');return 'YouTube is isolated from native permissions and has the app referrer identity';})()")
-    shell('input','keyevent','4')
-    wait_ui(lambda x:'Apps' in x or 'Criar conta' in x,'native player returns to the Amora')
-
     # A fixture session is local to this clean emulator; it cannot authenticate to the backend.
     evaluate('main', "window.AmoraAndroid.configureTracking(JSON.stringify({user:'f0000000-0000-4000-8000-000000000001',access:'local-test-not-a-token',refresh:'local-test',expires:Math.floor(Date.now()/1000)+3600,key:'local-test'}))")
     time.sleep(.5)
@@ -137,6 +131,13 @@ try:
     time.sleep(.5)
     assert 'MusicService' not in shell('dumpsys','activity','services','com.amora.app')
     print('PASS: sign-out cleanup stops the background music service',flush=True)
+
+
+    evaluate('main', 'window.AmoraAndroid.youtube("M7lc1UVf-VE")')
+    wait_ui(lambda x:'voltar ao amora' in x.casefold(),'YouTube opens in its own native player screen')
+    evaluate('youtube', "(()=>{if(window.AmoraAndroid)throw Error('Provider page received native bridge');if(location.origin!=='https://com.amora.app')throw Error('YouTube app identity missing');if(!document.querySelector('script[src=\"https://www.youtube.com/iframe_api\"]'))throw Error('Official YouTube API missing');return 'YouTube is isolated from native permissions and has the app referrer identity';})()")
+    shell('input','keyevent','4')
+    wait_ui(lambda x:'Apps' in x or 'Criar conta' in x,'native player returns to the Amora')
 
 
     subprocess.run(['adb', 'logcat', '-c'], check=True)
