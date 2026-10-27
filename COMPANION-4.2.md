@@ -31,6 +31,8 @@ A playlist e a reprodução são compartilhadas pelo vínculo. Os dois podem adi
 
 Esta integração mostra a faixa atual; não duplica o áudio do Spotify, não controla a conta do parceiro e não é um Spotify Jam. A playlist própria do Amora e o Spotify são funções distintas.
 
+Atualizações web de versão anterior são ignoradas pelo APK; instalar um APK mais novo também remove um bundle web antigo que o sobrepunha. Isso evita voltar por engano para a interface anterior.
+
 ## Operação e privacidade
 
 SQL aditivo: `supabase/amora-companion-upgrade.sql`. Novas tabelas têm RLS e nenhum acesso direto de anon/authenticated. RPC público é security invoker; helper privado verifica auth.uid e vínculo. Consentimento e escrita são sempre do próprio uid; não existe override de administrador. A API de música é acrescentada somente à função amora, preservando os outros produtos do projeto WORKSPACE.

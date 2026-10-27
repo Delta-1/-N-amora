@@ -1,4 +1,6 @@
 begin;
+create index if not exists namora_social_notification_time on public.namora_social_messages(to_couple,created_at desc);
+create index if not exists namora_safety_notification_time on public.namora_safety_events(couple_id,created_at desc);
 -- All private to the current vínculo; device consent belongs exclusively to its user.
 create table if not exists public.namora_personal_status(
  user_id uuid primary key references public.namora_members(user_id) on delete cascade,

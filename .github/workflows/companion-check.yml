@@ -29,6 +29,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: amora-personal-debug-keystore-v1
       - run: mkdir -p android/app/src/main/assets/web && cp -a docs/. android/app/src/main/assets/web/ && gradle -p android assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
