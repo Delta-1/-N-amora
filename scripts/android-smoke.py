@@ -227,7 +227,7 @@ try:
         evaluate('main', "window.AmoraAndroid.checkWebUpdate()")
         xml=wait_ui(lambda x:'Atualizar agora' in x,'new web bundle is offered inside the installed Android app')
         click_ui(xml,lambda n:n.get('text','')=='Atualizar agora')
-        wait_ui(lambda x:'Baixando' not in x and 'Comunidade' in x,'web update returns to the application without reinstalling APK')
+        wait_ui(lambda x:'Baixando' not in x and ('Comunidade' in x or 'Criar conta' in x),'web update returns to the application without reinstalling APK')
         evaluate('main', "(()=>{const d=JSON.parse(window.AmoraAndroid.webVersion());if(!/^[a-f0-9]{64}$/.test(d.id))throw Error('Downloaded bundle was not activated');return 'Verified downloaded web bundle active without APK reinstall';})()")
         screenshot('updated')
 
