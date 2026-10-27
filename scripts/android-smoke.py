@@ -151,7 +151,7 @@ try:
     import json
     # UIAutomator can mark the page heading clickable through the parent's touch handler.
     # Use the actual DOM shortcuts and map CSS coordinates into the native WebView bounds.
-    points=json.loads(evaluate('main', "(()=>{const center=id=>{const r=document.querySelector('.corner-menu [data-app='+id+']').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]};window.__rotaryTrace=[];for(const t of ['pointerdown','pointerup','pointercancel'])document.addEventListener(t,e=>window.__rotaryTrace.push({t,p:e.pointerType,b:e.button,app:e.target.closest('[data-app]')?.dataset.app,x:e.clientX,y:e.clientY}),true);return JSON.stringify({start:center('community'),end:center('map'),width:innerWidth,height:innerHeight})})()"))
+    points=json.loads(evaluate('main', "(()=>{const center=id=>{const r=document.querySelector('.corner-menu [data-app='+id+']').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]};window.__rotaryHeading=document.querySelector('.main-content h1')?.textContent;window.__rotaryTrace=[];for(const t of ['pointerdown','pointerup','pointercancel'])document.addEventListener(t,e=>window.__rotaryTrace.push({t,p:e.pointerType,b:e.button,app:e.target.closest('[data-app]')?.dataset.app,x:e.clientX,y:e.clientY}),true);return JSON.stringify({start:center('community'),end:center('map'),width:innerWidth,height:innerHeight})})()"))
     view=next(n for n in ET.fromstring(xml).iter('node') if n.get('class')=='android.webkit.WebView')
     vx1,vy1,vx2,vy2=map(int,re.findall(r'-?\d+',view.get('bounds')))
     def screen_point(p):return round(vx1+p[0]*(vx2-vx1)/points['width']),round(vy1+p[1]*(vy2-vy1)/points['height'])
@@ -159,7 +159,7 @@ try:
     print('Rotary finger coordinates:',sx,sy,ex,ey,flush=True)
     shell('input','swipe',str(sx),str(sy),str(ex),str(ey),'650')
     wait_ui(lambda x:'Apps' in x and 'Nosso perfil' in x,'finger swipe settles on another group')
-    evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(c.dataset.index==='0'||c.dataset.phase!=='idle')throw Error('Swipe did not rotate '+JSON.stringify({index:c.dataset.index,phase:c.dataset.phase,trace:window.__rotaryTrace}));if(!document.querySelector('.social-section-head')?.textContent.includes('Comunidade'))throw Error('Drag opened an app');return 'Finger swipe rotates without accidental navigation';})()")
+    evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(c.dataset.index==='0'||c.dataset.phase!=='idle')throw Error('Swipe did not rotate '+JSON.stringify({index:c.dataset.index,phase:c.dataset.phase,trace:window.__rotaryTrace}));if(document.querySelector('.main-content h1')?.textContent!==window.__rotaryHeading)throw Error('Drag changed the current screen');return 'Finger swipe rotates without accidental navigation';})()")
     screenshot('rotating-menu')
     evaluate('main', "document.querySelector('.corner-menu').dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true}))")
     screenshot('community')
