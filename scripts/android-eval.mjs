@@ -1,7 +1,7 @@
 // Test-only CDP client. The installed debug APK exposes its local WebViews over adb.
 const [page, expression] = process.argv.slice(2);
 const targets = await (await fetch('http://127.0.0.1:9223/json/list')).json();
-const target = targets.find(t => t.type === 'page' && t.url.includes('amora.local') &&
+const target = page==='youtube'?targets.find(t=>t.type==='page'&&t.url.startsWith('https://com.amora.app')):targets.find(t => t.type === 'page' && t.url.includes('amora.local') &&
   (page === 'overlay' ? t.url.includes('overlay=1') : !t.url.includes('overlay=1')));
 if (!target) throw Error(`No Amora ${page} WebView found`);
 const value = await new Promise((resolve, reject) => {

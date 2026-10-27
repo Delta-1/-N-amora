@@ -231,8 +231,15 @@ try:
     notification_dump=shell('dumpsys','notification','--noredact')
     assert 'amora-sos-vibrate-v1' in notification_dump and 'Teste do SOS neste aparelho' in notification_dump
     print('PASS: SOS test produces a real private Android notification on the vibration channel',flush=True)
-    assert '"usageAllowed"' in evaluate('main','window.AmoraAndroid.deviceStatus()')
+    local_device=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
+    assert 'usageAllowed' in local_device and isinstance(local_device['screen'],bool) and isinstance(local_device['locked'],bool) and 0 <= local_device['battery'] <= 100 and local_device['connection'] in ['wifi','mobile','offline','ethernet','other']
     print('PASS: usage permission is independently reported without granting app access',flush=True)
+
+    evaluate('main', 'window.AmoraAndroid.youtube("M7lc1UVf-VE")')
+    wait_ui(lambda x:'Voltar ao Amora' in x,'YouTube opens in its own native player screen')
+    evaluate('youtube', "(()=>{if(window.AmoraAndroid)throw Error('Provider page received native bridge');if(location.origin!=='https://com.amora.app')throw Error('YouTube app identity missing');if(!document.querySelector('script[src=\"https://www.youtube.com/iframe_api\"]'))throw Error('Official YouTube API missing');return 'YouTube is isolated from native permissions and has the app referrer identity';})()")
+    shell('input','keyevent','4')
+    wait_ui(lambda x:'Apps' in x,'native player returns to the Amora')
 
     # Request real MediaProjection consent on the clean emulator, not a mocked stream.
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'cinema'}}));window.__cinemaFrames=0;window.__cinemaCancelled=false;window.__cinemaNativeTest=e=>{if(e.detail.cinemaFrame)window.__cinemaFrames++;if(e.detail.cinemaError)window.__cinemaCancelled=true;};window.addEventListener('amora-native',window.__cinemaNativeTest);window.AmoraAndroid.cinemaShare()")
@@ -287,6 +294,31 @@ try:
     services=shell('dumpsys','activity','services','com.amora.app')
     assert 'OverlayService' not in services
     print('PASS: dropping bubble on X disables its service',flush=True)
+
+    # A fixture session is local to this clean emulator; it cannot authenticate to the backend.
+    evaluate('main', "window.AmoraAndroid.configureTracking(JSON.stringify({user:'f0000000-0000-4000-8000-000000000001',access:'local-test-not-a-token',refresh:'local-test',expires:Math.floor(Date.now()/1000)+3600,key:'local-test'}))")
+    time.sleep(.5)
+    xml=shell('uiautomator','dump','/sdcard/amora.xml');xml=shell('cat','/sdcard/amora.xml')
+    if 'Agora não' in xml:click_ui(xml,lambda n:n.get('text','')=='Agora não')
+    evaluate('main', 'window.AmoraAndroid.playMusic(JSON.stringify({url:"https://raw.githubusercontent.com/Delta-1/-N-amora/companion-upgrade/public/audio/amora-chime.wav",title:"Amora · teste de áudio",position:0,playing:true}))')
+    started=False
+    for _ in range(12):
+        time.sleep(.4)
+        status=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
+        if status.get('musicPlaying') and status.get('musicPosition',0)>500:started=True;break
+    assert started,'Native audio must decode and begin playback'
+    first_position=status['musicPosition']
+    shell('input','keyevent','KEYCODE_HOME')
+    time.sleep(2)
+    status=json.loads(evaluate('main','window.AmoraAndroid.deviceStatus()'))
+    assert status.get('musicPlaying') and status['musicPosition']>first_position+1000
+    assert 'MusicService' in shell('dumpsys','activity','services','com.amora.app')
+    print('PASS: real native audio keeps decoding and advancing after the app is minimized',flush=True)
+    shell('am','start','-W','-n','com.amora.app/.MainActivity')
+    evaluate('main','window.AmoraAndroid.clearSession()')
+    time.sleep(.5)
+    assert 'MusicService' not in shell('dumpsys','activity','services','com.amora.app')
+    print('PASS: sign-out cleanup stops the background music service',flush=True)
 
     if os.environ.get('GITHUB_REF') == 'refs/heads/main':
         shell('run-as','com.amora.app','mkdir','-p','files/amora-web-v1/active')

@@ -20,6 +20,7 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm build:pages
       - run: pnpm test:pages && pnpm test:supabase && pnpm test:app
+      - run: node scripts/cinema-browser-smoke.mjs
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -49,13 +50,6 @@ jobs:
           path: |
             Amora-Android.apk
           retention-days: 30
-      - name: Publish APK download
-        if: github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release view android-latest || gh release create android-latest --title 'Amora Android' --notes 'APK de teste para uso pessoal do casal. Android 8 ou superior. Cada pessoa entra na própria conta e conecta o vínculo.'
-          gh release upload android-latest Amora-Android.apk --clobber
 
   android-smoke:
     needs: apk
@@ -99,3 +93,19 @@ jobs:
             android-smoke*.txt
             android-smoke*.xml
           if-no-files-found: ignore
+
+  publish:
+    if: github.ref == 'refs/heads/main'
+    needs: android-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Amora-Android
+      - name: Publish APK download
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view android-latest || gh release create android-latest --title 'Amora Android' --notes 'APK de teste para uso pessoal do casal. Android 8 ou superior. Cada pessoa entra na própria conta e conecta o vínculo.'
+          gh release upload android-latest Amora-Android.apk --clobber
