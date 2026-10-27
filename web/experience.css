@@ -25,7 +25,7 @@
 .map-cantinho small{font-size:9px;letter-spacing:1.6px;color:var(--muted)}.map-cantinho strong{font-size:14px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .map-round-button{width:44px;height:44px;flex-shrink:0;display:grid;place-items:center;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:50%;box-shadow:0 3px 18px #20142a18}
 .map-round-button:active{transform:scale(.94)}.map-view-actions{position:absolute;z-index:500;right:12px;top:170px;display:grid;gap:10px}
-.map-mode .map-demo-label{z-index:450;top:87px;left:14px;font-size:10px;padding:6px 10px;pointer-events:none}
+.map-mode .map-demo-label{transform:none;z-index:450;top:87px;left:14px;font-size:10px;padding:6px 10px;pointer-events:none}
 .map-mode .map-network-note,.map-waiting{position:absolute;z-index:450;top:122px;left:14px;right:auto;bottom:auto;max-width:calc(100% - 90px);font-size:11px;line-height:1.5;background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:14px;box-shadow:0 2px 10px #0001}
 .map-person-marker{position:relative;width:54px;height:74px;display:flex;align-items:center;flex-direction:column;--person-color:#985c7e;cursor:pointer}.map-person-marker.sage{--person-color:#70896c}
 .map-person-avatar{width:52px;height:52px;border:4px solid white;border-radius:50%;background:var(--person-color);color:white;font-size:23px;font-weight:600;display:grid;place-items:center;box-shadow:0 3px 12px #20142a35}

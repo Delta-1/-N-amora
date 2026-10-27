@@ -168,7 +168,7 @@ try:
     evaluate('main', "Array.from(document.querySelectorAll('.map-tool-tabs button')).find(x=>x.textContent==='Lugares').click()")
     wait_ui(lambda x: 'Nossos lugares' in x and 'Marcar no mapa' in x, 'places open in the bottom tools panel')
     evaluate('main', "Array.from(document.querySelectorAll('.map-tool-tabs button')).find(x=>x.textContent==='Passos').click()")
-    wait_ui(lambda x: 'Mês dos passos' in x and 'Sem registros' in x, 'step summary opens from map shortcut')
+    wait_ui(lambda x: 'Passos do mês' in x and 'Sem registros' in x, 'step summary opens from map shortcut')
     evaluate('main', "Array.from(document.querySelectorAll('.map-tool-tabs button')).find(x=>x.textContent==='GPS').click()")
     xml=wait_ui(lambda x: 'Nosso GPS' in x and 'Recolher informações do mapa' in x, 'GPS controls open without leaving the map')
     node=next(n for n in ET.fromstring(xml).iter('node') if n.get('content-desc','')=='Recolher informações do mapa')
