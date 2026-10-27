@@ -148,7 +148,7 @@
 .corner-shell.camera-mode .corner-menu-shape,.corner-shell.camera-mode .corner-orbit-window,.corner-shell.camera-mode>.corner-profile{display:none}
 .corner-shell.camera-mode .corner-menu>button.corner-apps{left:50%;top:50%;background:var(--amora-violet);width:48px;height:48px;border-radius:16px}
 .corner-shell.camera-mode .corner-menu>button.corner-apps>svg{width:27px;height:27px}
-.corner-shell.camera-mode>.main-content{padding-bottom:0}
+.corner-shell.camera-mode>.main-content{padding:8px 12px 98px}
 
 .corner-shell .corner-menu{touch-action:none;user-select:none;outline-offset:-4px}
 .corner-menu-shape{cursor:grab}
