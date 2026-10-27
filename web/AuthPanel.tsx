@@ -31,7 +31,7 @@ export default function AuthPanel({ onDone, onNotify, recovery = false }: {
             const supa = getClient()!;
             const email = String(f.get('email') || '').trim();
             const password = String(f.get('password') || '');
-            const redirect = native()?'https://delta-1.github.io/-N-amora/docs/':new URL(import.meta.env.BASE_URL, location.href).href;
+            const redirect = native()?'https://delta-1.github.io/-N-amora/docs/auth-callback.html':new URL(import.meta.env.BASE_URL, location.href).href;
             if (mode === 'reset') {
                 const r = await supa.auth.resetPasswordForEmail(email, { redirectTo: redirect });
                 if (r.error)
