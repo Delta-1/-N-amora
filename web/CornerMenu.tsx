@@ -35,7 +35,7 @@ export default function CornerMenu({prefs,admin,tab,name,onOpen,onApps}:Props){
  return <>
   <button className={'corner-profile '+(tab==='profile'?'active':'')} aria-label="Nosso perfil" aria-current={tab==='profile'?'page':undefined} title="Nosso perfil" onClick={()=>onOpen('profile')}><UserRound aria-hidden="true"/><span className="corner-profile-name">{name}</span></button>
   <nav ref={nav} className="corner-menu" aria-label="Menu giratório do Amora" aria-description="Deslize sobre o arco, use a rolagem do mouse ou as setas do teclado para mostrar outros aplicativos." tabIndex={0} data-index={wrapIndex(index,order.length)} data-phase={phase}
-   onPointerDown={start} onPointerMove={move} onPointerUp={e=>release(e)} onPointerCancel={e=>release(e,true)} onLostPointerCapture={e=>{if(drag.current?.id===e.pointerId)release(e,true);}}
+   onPointerDown={start} onPointerMove={move} onPointerUp={e=>release(e)} onPointerCancel={e=>release(e,true)} onLostPointerCapture={e=>{if(e.target===e.currentTarget&&drag.current?.id===e.pointerId)release(e,true);}}
    onClickCapture={e=>{if(Date.now()<suppress.current){e.preventDefault();e.stopPropagation();}}}
    onKeyDown={e=>{if(['ArrowDown','ArrowRight','ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();step(['ArrowDown','ArrowRight'].includes(e.key)?1:-1);}if(e.key==='Home'&&!busy.current){e.preventDefault();setIndex(0);}}}>
    <svg className="corner-menu-shape" viewBox="0 0 280 280" aria-hidden="true"><path className="corner-menu-interior" d="M0 280A280 280 0 0 1 280 0V280Z"/><path className="corner-menu-arc" d="M0 280A280 280 0 0 1 280 0V67A213 213 0 0 0 67 280Z"/></svg>
