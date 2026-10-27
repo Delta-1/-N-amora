@@ -19,7 +19,7 @@ def screenshot(name):
 
 def wait_ui(predicate, label):
     for _ in range(15):
-        time.sleep(2)
+        time.sleep(0.5)
         try:
             dump = shell('uiautomator', 'dump', '/sdcard/amora.xml')
         except subprocess.CalledProcessError:
@@ -95,6 +95,7 @@ try:
     click_ui(xml,lambda n:n.get('content-desc','')=='Ocultar senha' or n.get('text','') in ('Ocultar','Ocultar senha'))
     wait_ui(lambda x:'Mostrar senha' in x,'password can be hidden again')
     evaluate('main', "(()=>{if(document.querySelector('input[name=password]').type!=='password')throw Error('Password remains visible');return 'Password visibility toggle works';})()")
+    evaluate('main',"(async()=>{const pdf=await import('./pdfjs/pdf.min.js');pdf.GlobalWorkerOptions.workerSrc=new URL('./pdfjs/pdf.worker.min.js',location.href).href;globalThis.pdfjsWorker=await import('./pdfjs/pdf.worker.min.js');const doc=await pdf.getDocument({data:new TextEncoder().encode(\"%PDF-1.4\\n1 0 obj\\n<< /Type /Catalog /Pages 2 0 R >>\\nendobj\\n2 0 obj\\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\\nendobj\\n3 0 obj\\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] /Contents 4 0 R >>\\nendobj\\n4 0 obj\\n<< /Length 28 >>\\nstream\\n0 0 1 rg 20 20 200 300 re f\\nendstream\\nendobj\\nxref\\n0 5\\n0000000000 65535 f \\n0000000009 00000 n \\n0000000058 00000 n \\n0000000115 00000 n \\n0000000202 00000 n \\ntrailer\\n<< /Size 5 /Root 1 0 R >>\\nstartxref\\n279\\n%%EOF\"),isEvalSupported:false}).promise;const page=await doc.getPage(1),viewport=page.getViewport({scale:1}),canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;const pixel=canvas.getContext('2d').getImageData(100,100,1,1).data;if(pixel[2]!==255||pixel[0]!==0)throw Error('PDF page did not render');await doc.destroy();return 'Private PDF page renders inside Android without an external viewer';})()")
     subprocess.run(['adb', 'logcat', '-c'], check=True)
     # Consent is granted only on the clean test emulator.
     shell('appops', 'set', 'com.amora.app', 'SYSTEM_ALERT_WINDOW', 'allow')
@@ -251,7 +252,6 @@ try:
     evaluate('main',"window.removeEventListener('amora-native',window.__cinemaNativeTest)")
     print('PASS: stopping Cinema releases the screen-sharing foreground service',flush=True)
     # The locally packaged PDF engine must load in Android without an external document viewer.
-    evaluate('main',"(async()=>{const pdf=await import('./pdfjs/pdf.min.js');pdf.GlobalWorkerOptions.workerSrc=new URL('./pdfjs/pdf.worker.min.js',location.href).href;const doc=await pdf.getDocument({data:new TextEncoder().encode(\"%PDF-1.4\\n1 0 obj\\n<< /Type /Catalog /Pages 2 0 R >>\\nendobj\\n2 0 obj\\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\\nendobj\\n3 0 obj\\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] /Contents 4 0 R >>\\nendobj\\n4 0 obj\\n<< /Length 28 >>\\nstream\\n0 0 1 rg 20 20 200 300 re f\\nendstream\\nendobj\\nxref\\n0 5\\n0000000000 65535 f \\n0000000009 00000 n \\n0000000058 00000 n \\n0000000115 00000 n \\n0000000202 00000 n \\ntrailer\\n<< /Size 5 /Root 1 0 R >>\\nstartxref\\n279\\n%%EOF\"),isEvalSupported:false}).promise;const page=await doc.getPage(1),viewport=page.getViewport({scale:1}),canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;const pixel=canvas.getContext('2d').getImageData(100,100,1,1).data;if(pixel[2]!==255||pixel[0]!==0)throw Error('PDF page did not render');await doc.destroy();return 'Private PDF page renders inside Android without an external viewer';})()")
 
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'chat'}}))")
     wait_ui(lambda x: 'Voltar das mensagens' in x and 'Só vocês dois' in x, 'partner chat opens as its own screen')
