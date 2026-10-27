@@ -14,3 +14,5 @@ applyAppearance((localStorage.getItem('amora.appearance.v1')||'dark') as Appeara
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
 
 import './cinema-library.css';
+
+import "./companion.css";

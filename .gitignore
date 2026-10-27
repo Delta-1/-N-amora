@@ -56,3 +56,5 @@ yarn-error.log*
 /android-smoke-*.txt
 /android-smoke-*.xml
 **/__pycache__/
+
+/public/pdfjs/
