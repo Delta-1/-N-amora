@@ -8,7 +8,7 @@ alter table public.namora_files drop constraint if exists namora_files_taken_ran
 alter table public.namora_files add constraint namora_files_taken_range check(taken_at is null or taken_at between '1800-01-01'::timestamptz and '2200-01-01'::timestamptz);
 drop policy if exists couple_insert on public.namora_files;
 create policy couple_insert on public.namora_files for insert to authenticated with check(couple_id=(select namora_private.couple_id()) and creator=(select auth.uid()) and drive_id is null and drive_at is null and drive_owner is null and catalogued_at is null);
-create or replace function namora_private.library_metadata_changed() returns trigger language plpgsql security invoker set search_path='' as $begin if new.name is distinct from old.name or new.caption is distinct from old.caption or new.folder is distinct from old.folder or new.taken_at is distinct from old.taken_at then new.catalogued_at:=null;end if;return new;end;$;
+create or replace function namora_private.library_metadata_changed() returns trigger language plpgsql security invoker set search_path='' as $$begin if new.name is distinct from old.name or new.caption is distinct from old.caption or new.folder is distinct from old.folder or new.taken_at is distinct from old.taken_at then new.catalogued_at:=null;end if;return new;end;$$;
 revoke all on function namora_private.library_metadata_changed() from public,anon,authenticated;
 drop trigger if exists amora_library_metadata on public.namora_files;
 create trigger amora_library_metadata before update on public.namora_files for each row execute function namora_private.library_metadata_changed();

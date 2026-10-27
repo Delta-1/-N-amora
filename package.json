@@ -18,7 +18,7 @@
     "preview": "vite preview --config vite.pages.config.ts",
     "test:pages": "node --test tests/pages.test.mjs",
     "test:supabase": "node tests/supabase.test.mjs",
-    "test:app": "node --test tests/app.test.mjs tests/mobile.test.mjs tests/invitation.test.mjs tests/map.test.mjs tests/rotary.test.mjs tests/auth-redirect.test.mjs && node tests/app-rls.test.mjs && node tests/safety.test.mjs && node tests/community.test.mjs && node tests/calls.test.mjs && node --test tests/cinema-model.test.mjs && node tests/cinema-library.test.mjs"
+    "test:app": "node --test tests/app.test.mjs tests/mobile.test.mjs tests/invitation.test.mjs tests/map.test.mjs tests/rotary.test.mjs tests/auth-redirect.test.mjs && node tests/app-rls.test.mjs && node tests/safety.test.mjs && node tests/community.test.mjs && node tests/calls.test.mjs && node --test tests/cinema-model.test.mjs && node tests/cinema-library.test.mjs && node --test tests/drive-library.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
