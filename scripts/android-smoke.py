@@ -146,9 +146,20 @@ try:
     # Exercise the actual app drawer and map without requiring account credentials.
     evaluate('main', "document.querySelector('.explore-button').click()")
     wait_ui(lambda x: 'Comunidade' in x and 'Apps' in x, 'demo enters the complete mobile shell')
-    evaluate('main', "(()=>{const c=document.querySelector('.corner-menu'),d=document.querySelector('.mobile-dock');if(getComputedStyle(c).display!=='none'||getComputedStyle(d).display==='none')throw Error('Tablet menu replaced the phone navigation');const buttons=Array.from(d.querySelectorAll('button'));if(buttons.length!==5||buttons.some(x=>{const r=x.getBoundingClientRect();return r.width<30||r.left<0||r.right>innerWidth||r.bottom>innerHeight;}))throw Error('Phone shortcuts are clipped');return 'Phone keeps its five existing bottom shortcuts';})()")
+    evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(getComputedStyle(c).display==='none')throw Error('Rotating menu missing');const buttons=Array.from(c.querySelectorAll('[data-visible=true]'));if(buttons.length!==3||buttons.some(x=>{const r=x.getBoundingClientRect();return r.width<40||r.left<0||r.right>innerWidth||r.bottom>innerHeight;}))throw Error('Rotating shortcuts clipped');return 'Three rotating shortcuts fit the phone';})()")
+    xml=wait_ui(lambda x:'Menu giratório' in x and 'Comunidade' in x,'rotating menu ready for a finger gesture')
+    def shortcut_center(label):
+        node=next(n for n in ET.fromstring(xml).iter('node') if n.get('text','')==label or n.get('content-desc','')==label)
+        x1,y1,x2,y2=map(int,re.findall(r'-?\d+',node.get('bounds')))
+        return (x1+x2)//2,(y1+y2)//2
+    sx,sy=shortcut_center('Comunidade');ex,ey=shortcut_center('Mapa')
+    shell('input','swipe',str(sx),str(sy),str(ex),str(ey),'650')
+    wait_ui(lambda x:'Apps' in x and 'Nosso perfil' in x,'finger swipe settles on another group')
+    evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(c.dataset.index==='0'||c.dataset.phase!=='idle')throw Error('Swipe did not rotate');if(!document.querySelector('.social-section-head')?.textContent.includes('Comunidade'))throw Error('Drag opened an app');return 'Finger swipe rotates without accidental navigation';})()")
+    screenshot('rotating-menu')
+    evaluate('main', "document.querySelector('.corner-menu').dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true}))")
     screenshot('community')
-    evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
+    evaluate('main', "document.querySelector('.corner-apps').click()")
     xml = wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'Apps drawer opens all routes')
     evaluate('main', "(()=>{const map=Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==='Mapa').getBoundingClientRect();if(map.height<30||map.top<0||map.bottom>innerHeight)throw Error('Map shortcut is clipped by the drawer');return 'Map shortcut fits the visible drawer';})()")
     import json
@@ -160,11 +171,11 @@ try:
     wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'short drawer drag returns to its open position')
     shell('input','swipe',str(x),str(y),str(x),str(y+310),'450')
     wait_ui(lambda x: 'Aplicativos' not in x and 'Comunidade' in x, 'long drawer drag dismisses to the previous screen')
-    evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
+    evaluate('main', "document.querySelector('.corner-apps').click()")
     xml=wait_ui(lambda x: 'Aplicativos' in x and 'Mapa' in x, 'drawer reopens after a drag dismissal')
     click_ui(xml, lambda n: n.get('text', '') == 'Mapa')
     wait_ui(lambda x: 'Mapa com a posição' in x and 'Quem está por perto' in x, 'map opens before any GPS position is available')
-    evaluate('main', "(()=>{const map=document.querySelector('.leaflet-couple-map'),r=map.getBoundingClientRect();if(!map.classList.contains('leaflet-container')||r.height<innerHeight-2||r.width<innerWidth-2)throw Error('Map is not full screen');if(document.querySelectorAll('.map-person-name').length!==2)throw Error('Profiles are missing from map');if(getComputedStyle(document.querySelector('.mobile-dock')).display!=='none')throw Error('Main dock covers map');return 'Full screen map with two labeled demo markers';})()")
+    evaluate('main', "(()=>{const map=document.querySelector('.leaflet-couple-map'),r=map.getBoundingClientRect();if(!map.classList.contains('leaflet-container')||r.height<innerHeight-2||r.width<innerWidth-2)throw Error('Map is not full screen');if(document.querySelectorAll('.map-person-name').length!==2)throw Error('Profiles are missing from map');if(getComputedStyle(document.querySelector('.corner-menu')).display!=='none')throw Error('Main dock covers map');return 'Full screen map with two labeled demo markers';})()")
     screenshot('map')
     evaluate('main', "document.querySelectorAll('.map-people button')[1].click()")
     wait_ui(lambda x: 'Posição atualizada' in x and 'Seu amor' in x, 'profile balloon and person panel identify the selected partner')
@@ -197,7 +208,7 @@ try:
     assert 'namora-smoke-photo.jpg' in photos and 'Pictures/NAMORA' in photos
     print('PASS: captured JPEG exists in gallery Pictures/NAMORA',flush=True)
     for label, title in [('Conversa','Seu amor, logo aqui.'),('Nosso bolso','Dividir também é cuidar.'),('Jogos','Um tempinho para brincar.'),('Desenho','Memórias em cada traço.'),('Notas','O que a gente imagina junto.'),('Agenda','Tempo para o que importa.'),('Nossa história','Os dias que viraram nós.'),('Combinados','Pequenos planos, juntos.'),('Ideias','Boas ideias, lindas memórias.'),('Arquivos','Nossos arquivos'),('Álbum','Nossas lembranças')]:
-        evaluate('main', "Array.from(document.querySelectorAll('.mobile-dock button')).find(x=>x.textContent==='Apps').click()")
+        evaluate('main', "document.querySelector('.corner-apps').click()")
         wait_ui(lambda x: 'Aplicativos' in x and 'Organizar' in x, 'drawer is ready for '+label)
         import json
         evaluate('main', "Array.from(document.querySelectorAll('.app-tile')).find(x=>x.textContent==="+json.dumps(label)+").click()")
@@ -205,7 +216,7 @@ try:
 
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'chat'}}))")
     wait_ui(lambda x: 'Voltar das mensagens' in x and 'Só vocês dois' in x, 'partner chat opens as its own screen')
-    evaluate('main', "(()=>{if(getComputedStyle(document.querySelector('.mobile-dock')).display!=='none')throw Error('Navigation covers conversation');const c=document.querySelector('.composer').getBoundingClientRect();if(c.bottom>innerHeight||c.top<0)throw Error('Composer is outside the viewport');return 'Conversation composer visible';})()")
+    evaluate('main', "(()=>{if(getComputedStyle(document.querySelector('.corner-menu')).display!=='none')throw Error('Navigation covers conversation');const c=document.querySelector('.composer').getBoundingClientRect();if(c.bottom>innerHeight||c.top<0)throw Error('Composer is outside the viewport');return 'Conversation composer visible';})()")
     screenshot('conversation')
     evaluate('main', "window.dispatchEvent(new CustomEvent('amora-native',{detail:{route:'camera'}}))")
     wait_ui(lambda x:'Personalizar foto' in x and 'Tirar foto' in x,'floating shortcut can open camera from the full conversation')

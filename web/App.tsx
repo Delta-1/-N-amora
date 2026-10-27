@@ -7,7 +7,7 @@ import SafetyMap,{SOSButton,SOSSettings,SafetyMonitor} from './Safety';
 import {trackingCall,startTracking,stopTracking} from './tracking';
 import FeatureBoundary from './FeatureBoundary';
 import Orb from './Orb';
-import {MobileDock,AppsDrawer,MobileSettings,useAppPreferences,useAppearance} from './MobileShell';
+import {AppsDrawer,MobileSettings,useAppPreferences,useAppearance} from './MobileShell';
 import {DriveSettings} from './IntegrationSettings';
 import type {AppId} from './mobile-model';
 const CameraApp=lazy(()=>import('./Camera'));
@@ -553,8 +553,8 @@ export default function Namora() {
 
  </div></FeatureBoundary>
  </main>
- <MobileDock prefs={prefs} tab={tab} onOpen={switchTab} onApps={()=>setAppsOpen(true)}/><CornerMenu name={state.couple?.name||state.user.displayName} tab={tab} onOpen={switchTab} onApps={()=>setAppsOpen(true)}/><AppsDrawer open={appsOpen} onClose={()=>setAppsOpen(false)} onOpen={switchTab} prefs={prefs} onChange={setPrefs} onSettings={()=>{setAppsOpen(false);setSettingsView('personal');open('settings');}} onJoin={openScan}/>
- <button className="lilith-fab" onClick={()=>setLilithOpen(true)} aria-label="Abrir Lilith"><Orb small speaking={orbSpeaking}/></button>
+ <CornerMenu prefs={prefs} admin={!!state.user.isAdmin} name={state.couple?.name||state.user.displayName} tab={tab} onOpen={switchTab} onApps={()=>setAppsOpen(true)}/><AppsDrawer open={appsOpen} onClose={()=>setAppsOpen(false)} onOpen={switchTab} prefs={prefs} onChange={setPrefs} onSettings={()=>{setAppsOpen(false);setSettingsView('personal');open('settings');}} onJoin={openScan}/>
+
 
  {lilithOpen&&<Lilith state={state} demo={demo} notify={notify} onClose={()=>{setLilithOpen(false);if(new URLSearchParams(location.search).has('overlay'))native()?.closeOverlay();}} onRefresh={refresh} onSettings={()=>{setLilithOpen(false);setSettingsView('ai');open('settings');}} onNavigate={next=>{if(nav.some(n=>n.id===next)){if(new URLSearchParams(location.search).has('overlay')&&native())native()!.openApp(next);else{setLilithOpen(false);switchTab(next as Tab);}}}}/>}
  {toast && <div className="toast" role="status"><Heart size={16}/>{toast}<button onClick={() => setToast('')} aria-label="Dispensar"><X size={15}/></button></div>}

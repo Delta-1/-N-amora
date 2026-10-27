@@ -1,5 +1,4 @@
-/* Tablet and desktop follow Victor's sketch. Phone styles stay in x-layout.css. */
-.corner-menu,.corner-profile{display:none}
+/* The page stays compact on phones; the rotating corner is shared by every screen. */
 @media (min-width:768px) and (pointer:fine), (min-width:768px) and (min-height:600px), (min-width:1100px){
 :root[data-theme="kuromi-dark"]{--bg:#101126;--surface:#181a34;--surface-soft:#20223e;--ink:#f5f3ff;--muted:#aaaac7;--accent:#b8a1ff;--accent-deep:#d9cdff;--accent-soft:#292049;--line:#a49bcc24;--hero:#242040;--nav-bg:#101126f5;--amora-violet:#6415ed}
 [data-theme="kuromi-light"]{--bg:#f5f3fc;--surface:#ffffff;--surface-soft:#eae6f5;--ink:#232039;--muted:#75708b;--accent:#6636bf;--accent-deep:#4a208b;--accent-soft:#e9defa;--line:#9183b62e;--hero:#e8dcf8;--nav-bg:#f5f3fcf5;--amora-violet:#6415ed}
@@ -101,36 +100,6 @@
 .corner-shell .social-compose textarea{background:transparent;border-color:var(--line);font-size:16px}
 .corner-shell .social-section-head+.social-inbox-note{margin-top:-10px}
 .corner-shell .about-amora{margin-top:0}
-/* Pointer events only cover the painted arc and buttons, leaving the canvas usable. */
-.corner-shell>.corner-menu{position:fixed;right:max(0px,env(safe-area-inset-right));bottom:max(0px,env(safe-area-inset-bottom));left:auto;transform:none;display:block;width:var(--corner-size);height:var(--corner-size);min-height:0;max-width:none;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;z-index:55;pointer-events:none}
-.corner-menu-shape{position:absolute;inset:0;width:100%;height:100%;pointer-events:visiblePainted;filter:drop-shadow(-6px -5px 22px #08091a12)}
-.corner-menu-interior{fill:var(--bg)}
-.corner-menu-arc{fill:var(--amora-violet)}
-.corner-shell .corner-menu>button{position:absolute;display:grid;place-items:center;flex-direction:initial;width:48px;height:48px;min-width:0;padding:0;margin:0;border:0;border-radius:50%;background:transparent;color:#fff;pointer-events:auto;transform:translate(-50%,-50%);transition:background .16s ease,transform .16s ease}
-.corner-shell .corner-menu>button>svg{width:27px;height:27px;stroke-width:2.3}
-.corner-shell .corner-menu>button:hover,.corner-shell .corner-menu>button:focus-visible{background:#ffffff26;transform:translate(-50%,-50%) scale(1.08)}
-.corner-shell .corner-menu>button:active{transform:translate(-50%,-50%) scale(.92)}
-.corner-shell .corner-menu>button.active{background:#101126d9;color:#fff;box-shadow:0 0 0 1px #ffffff29}
-.corner-shell .corner-menu>button.active:after{display:none}
-.corner-slot-0{left:15.5%;top:77.4%}
-.corner-slot-1{left:38.1%;top:38.1%}
-.corner-slot-2{left:77.4%;top:15.5%}
-.corner-shell .corner-menu>button.corner-apps{left:77.4%;top:77.4%;width:54px;height:54px;background:transparent;border-radius:14px;box-shadow:none}
-.corner-shell .corner-menu>button.corner-apps>svg{width:39px;height:39px}
-.corner-shell .corner-menu .corner-menu-label{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);max-width:none;white-space:nowrap;font-size:11px;font-weight:500;color:var(--ink);background:var(--surface);padding:7px 10px;border:1px solid var(--line);border-radius:10px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s ease}
-.corner-shell .corner-menu button:hover>.corner-menu-label,.corner-shell .corner-menu button:focus-visible>.corner-menu-label{visibility:visible;opacity:1}
-.corner-shell>.corner-profile{display:grid;position:fixed;left:max(27px,env(safe-area-inset-left));bottom:max(27px,env(safe-area-inset-bottom));width:54px;height:54px;border:0;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--amora-violet);z-index:55;box-shadow:0 4px 17px #08091a22;transition:transform .16s ease}
-.corner-profile>svg{width:32px;height:32px;stroke-width:2.5}
-.corner-profile.active{box-shadow:0 0 0 4px var(--bg),0 0 0 5px var(--accent)}
-.corner-profile:hover{transform:translateY(-3px)}
-.corner-profile-name{position:absolute;bottom:calc(100% + 12px);left:0;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:7px 10px;border-radius:10px;visibility:hidden;opacity:0}
-.corner-profile:hover>.corner-profile-name,.corner-profile:focus-visible>.corner-profile-name{visibility:visible;opacity:1}
-.corner-shell.map-mode>.corner-menu,.corner-shell.map-mode>.corner-profile,.corner-shell.conversation-mode>.corner-menu,.corner-shell.conversation-mode>.corner-profile,.corner-shell.overlay-shell>.corner-menu,.corner-shell.overlay-shell>.corner-profile{display:none!important}
-.corner-shell.camera-mode>.corner-menu{width:64px;height:64px;bottom:15px;right:15px}
-.corner-shell.camera-mode .corner-menu-shape,.corner-shell.camera-mode .corner-shortcut,.corner-shell.camera-mode>.corner-profile{display:none}
-.corner-shell.camera-mode .corner-menu>button.corner-apps{left:50%;top:50%;background:var(--amora-violet);width:48px;height:48px;border-radius:16px}
-.corner-shell.camera-mode .corner-menu>button.corner-apps>svg{width:27px;height:27px}
-.corner-shell.camera-mode>.main-content{padding-bottom:0}
 .corner-shell .apps-drawer{inset:auto 18px 18px auto;margin:0;width:min(460px,calc(100% - 36px));max-width:none;height:min(85dvh,740px);max-height:85dvh;border-radius:27px;border:1px solid var(--line);padding:10px 22px 25px;box-shadow:0 20px 80px #03041560}
 .corner-shell .apps-drawer header small{letter-spacing:1.4px;font-size:9px}
 .corner-shell .apps-drawer h2{font:650 26px system-ui,sans-serif;letter-spacing:-.6px}
@@ -146,4 +115,61 @@
 @media(max-height:520px) and (orientation:landscape){.corner-shell{--corner-size:168px}.corner-shell>.topbar{height:61px}.corner-shell .corner-menu>button{width:40px;height:40px}.corner-shell .corner-menu>button>svg{width:22px;height:22px}.corner-shell .corner-menu>button.corner-apps>svg{width:28px;height:28px}.corner-shell .update-notice{bottom:15px;max-height:calc(100dvh - 30px);left:15px;transform:none;width:calc(100% - 205px)}.corner-profile{width:44px;height:44px;bottom:17px;left:17px}}
 @media(prefers-reduced-motion:reduce){.corner-menu>button,.corner-profile,.corner-menu-label{transition:none!important}}
 
+
+
 }
+:root{--amora-violet:#6415ed}
+.corner-shell{--corner-size:205px}
+.corner-shell>.mobile-dock,.corner-shell>.lilith-fab{display:none!important}
+.corner-shell.social-mode .main-content,.corner-shell .main-content{padding-bottom:calc(var(--corner-size) + 35px)}
+/* Pointer events only cover the painted arc and buttons, leaving the canvas usable. */
+.corner-shell>.corner-menu{position:fixed;right:max(0px,env(safe-area-inset-right));bottom:max(0px,env(safe-area-inset-bottom));left:auto;transform:none;display:block;width:var(--corner-size);height:var(--corner-size);min-height:0;max-width:none;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;z-index:55;pointer-events:none}
+.corner-menu-shape{position:absolute;inset:0;width:100%;height:100%;pointer-events:visiblePainted;filter:drop-shadow(-6px -5px 22px #08091a12)}
+.corner-menu-interior{fill:var(--bg)}
+.corner-menu-arc{fill:var(--amora-violet)}
+.corner-shell .corner-menu button{position:absolute;display:grid;place-items:center;flex-direction:initial;width:48px;height:48px;min-width:0;padding:0;margin:0;border:0;border-radius:50%;background:transparent;color:#fff;pointer-events:auto;transform:rotate(calc(-1 * var(--turn,0deg)));transition:background .16s ease}
+.corner-shell .corner-menu button>svg{width:27px;height:27px;stroke-width:2.3}
+.corner-shell .corner-menu button:hover,.corner-shell .corner-menu button:focus-visible{background:#ffffff26;transform:rotate(calc(-1 * var(--turn,0deg))) scale(1.08)}
+.corner-shell .corner-menu button:active{transform:rotate(calc(-1 * var(--turn,0deg))) scale(.92)}
+.corner-shell .corner-menu button.active{background:#101126d9;color:#fff;box-shadow:0 0 0 1px #ffffff29}
+.corner-shell .corner-menu button.active:after{display:none}
+.corner-shell .corner-menu button.corner-apps{left:77.4%;top:77.4%;transform:translate(-50%,-50%);width:54px;height:54px;background:transparent;border-radius:14px;box-shadow:none}
+.corner-shell .corner-menu button.corner-apps>svg{width:39px;height:39px}
+.corner-shell .corner-menu .corner-menu-label{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);max-width:none;white-space:nowrap;font-size:11px;font-weight:500;color:var(--ink);background:var(--surface);padding:7px 10px;border:1px solid var(--line);border-radius:10px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s ease}
+.corner-shell .corner-menu button:hover>.corner-menu-label,.corner-shell .corner-menu button:focus-visible>.corner-menu-label{visibility:visible;opacity:1}
+.corner-shell>.corner-profile{display:grid;position:fixed;left:max(27px,env(safe-area-inset-left));bottom:max(27px,env(safe-area-inset-bottom));width:54px;height:54px;border:0;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--amora-violet);z-index:55;box-shadow:0 4px 17px #08091a22;transition:transform .16s ease}
+.corner-profile>svg{width:32px;height:32px;stroke-width:2.5}
+.corner-profile.active{box-shadow:0 0 0 4px var(--bg),0 0 0 5px var(--accent)}
+.corner-profile:hover{transform:translateY(-3px)}
+.corner-profile-name{position:absolute;bottom:calc(100% + 12px);left:0;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:7px 10px;border-radius:10px;visibility:hidden;opacity:0}
+.corner-profile:hover>.corner-profile-name,.corner-profile:focus-visible>.corner-profile-name{visibility:visible;opacity:1}
+.corner-shell.map-mode>.corner-menu,.corner-shell.map-mode>.corner-profile,.corner-shell.conversation-mode>.corner-menu,.corner-shell.conversation-mode>.corner-profile,.corner-shell.overlay-shell>.corner-menu,.corner-shell.overlay-shell>.corner-profile{display:none!important}
+.corner-shell.camera-mode>.corner-menu{width:64px;height:64px;bottom:15px;right:15px}
+.corner-shell.camera-mode .corner-menu-shape,.corner-shell.camera-mode .corner-orbit-window,.corner-shell.camera-mode>.corner-profile{display:none}
+.corner-shell.camera-mode .corner-menu>button.corner-apps{left:50%;top:50%;background:var(--amora-violet);width:48px;height:48px;border-radius:16px}
+.corner-shell.camera-mode .corner-menu>button.corner-apps>svg{width:27px;height:27px}
+.corner-shell.camera-mode>.main-content{padding-bottom:0}
+
+.corner-shell .corner-menu{touch-action:none;user-select:none;outline-offset:-4px}
+.corner-menu-shape{cursor:grab}
+.corner-orbit-window{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.corner-orbit{position:absolute;inset:0;transform-origin:100% 100%;transform:rotate(var(--turn));pointer-events:none}
+.corner-orbit-item{position:absolute;width:48px;height:48px;transform:translate(-50%,-50%);pointer-events:none}
+.corner-shell .corner-orbit-item>button{left:0;top:0;touch-action:none;cursor:grab}
+.corner-shell .corner-orbit-item[aria-hidden=true]>button{pointer-events:none}
+.corner-menu[data-phase=settling] .corner-orbit,.corner-menu[data-phase=settling] .corner-orbit-item>button{transition:transform .24s cubic-bezier(.2,.8,.2,1)}
+.corner-menu[data-phase=dragging] .corner-orbit-item>button,.corner-menu[data-phase=dragging] .corner-menu-shape{cursor:grabbing;transition:none}
+.corner-shell .corner-menu>.corner-apps:hover,.corner-shell .corner-menu>.corner-apps:focus-visible{transform:translate(-50%,-50%) scale(1.08)}
+.corner-shell .corner-menu>.corner-apps:active{transform:translate(-50%,-50%) scale(.92)}
+.corner-shell .corner-orbit-item button:has(svg[viewBox="0 0 48 48"])>svg{width:37px;height:37px}
+.corner-rotate-hint{position:absolute;right:12%;bottom:36%;font-size:10px;line-height:1.4;text-align:center;color:var(--muted);pointer-events:none;opacity:.8}
+.corner-shell .toast{bottom:calc(var(--corner-size) + 15px)}
+.corner-shell .update-notice{bottom:calc(var(--corner-size) + 15px);max-height:calc(100dvh - var(--corner-size) - 34px);overflow:auto}
+@media(min-width:768px){.corner-shell{--corner-size:234px}}
+@media(min-width:1100px){.corner-shell{--corner-size:270px}}
+@media(max-width:767px){
+ .corner-shell .corner-menu button,.corner-orbit-item{width:44px;height:44px}.corner-shell .corner-menu button>svg{width:24px;height:24px}.corner-shell .corner-menu>.corner-apps{width:48px;height:48px}.corner-shell .corner-menu>.corner-apps>svg{width:32px;height:32px}.corner-shell>.corner-profile{width:48px;height:48px;left:max(18px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom))}.corner-profile>svg{width:29px;height:29px}.corner-rotate-hint{font-size:9px}.corner-shell .corner-menu .corner-menu-label{font-size:10px;padding:5px 8px;right:calc(100% + 6px)}
+}
+@media(max-width:370px){.corner-shell{--corner-size:188px}.corner-rotate-hint{font-size:8px}}
+@media(max-height:520px) and (orientation:landscape){.corner-shell{--corner-size:168px}.corner-shell .corner-menu button,.corner-orbit-item{width:40px;height:40px}.corner-shell .corner-menu button>svg{width:22px;height:22px}.corner-shell .corner-menu>.corner-apps>svg{width:28px;height:28px}.corner-rotate-hint{display:none}.corner-shell .update-notice{bottom:15px;max-height:calc(100dvh - 30px);left:15px;transform:none;width:calc(100% - 205px)}}
+@media(prefers-reduced-motion:reduce){.corner-orbit,.corner-orbit-item>button,.corner-menu button,.corner-profile{transition:none!important}}
