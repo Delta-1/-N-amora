@@ -17,6 +17,8 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm build:pages
       - run: pnpm test:pages && pnpm test:supabase && pnpm test:app
+      - name: Verify real browser video, PDF reader and responsive screens
+        run: node scripts/cinema-browser-smoke.mjs
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

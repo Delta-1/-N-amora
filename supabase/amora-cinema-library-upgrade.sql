@@ -59,7 +59,7 @@ alter table public.namora_cinema_messages enable row level security;
 revoke all on public.namora_cinema_rooms,public.namora_cinema_invites,public.namora_cinema_people,public.namora_cinema_signals,public.namora_cinema_messages from public,anon,authenticated;
 grant all on public.namora_cinema_rooms,public.namora_cinema_invites,public.namora_cinema_people,public.namora_cinema_signals,public.namora_cinema_messages to service_role;
 create or replace function namora_private.cinema_action(payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
-declare uid uuid:=auth.uid();cid uuid;act text:=coalesce(payload->>'action','list');
+declare req jsonb:=payload;uid uuid:=auth.uid();cid uuid;act text:=coalesce(req->>'action','list');
  r public.namora_cinema_rooms;p public.namora_cinema_people;q public.namora_cinema_people;
  rid uuid;client uuid;target uuid;body text;vurl text;
 begin
@@ -75,15 +75,15 @@ begin
  namora_private.social_friend(cid,s.host_couple) and exists(select 1 from public.namora_cinema_invites i where i.room_id=s.id and i.couple_id=cid)))
  order by s.created_at desc limit 30)x),'[]'::jsonb);
  end if;
- client:=(payload->>'client')::uuid;if client is null then raise exception 'Abra a sala novamente.';end if;
+ client:=(req->>'client')::uuid;if client is null then raise exception 'Abra a sala novamente.';end if;
  if act='create' then
  perform pg_advisory_xact_lock(hashtext(uid::text),5291);
  if (select count(*) from public.namora_cinema_rooms where host_couple=cid and not closed and expires_at>now())>=3 then raise exception 'Encerre uma sala antes de abrir outra.';end if;
- insert into public.namora_cinema_rooms(host_couple,host_id,title) values(cid,uid,left(coalesce(nullif(btrim(payload->>'title'),''),'Nosso cinema'),70)) returning * into r;
+ insert into public.namora_cinema_rooms(host_couple,host_id,title) values(cid,uid,left(coalesce(nullif(btrim(req->>'title'),''),'Nosso cinema'),70)) returning * into r;
  insert into public.namora_cinema_people(room_id,user_id,couple_id,client_id)values(r.id,uid,cid,client);
  return to_jsonb(r);
  end if;
- rid:=(payload->>'id')::uuid;
+ rid:=(req->>'id')::uuid;
  select * into r from public.namora_cinema_rooms where id=rid for update;
  if r.id is null or r.closed or r.expires_at<=now() then raise exception 'Esta sala foi encerrada.';end if;
  if cid<>r.host_couple and(not namora_private.social_friend(cid,r.host_couple) or not exists(select 1 from public.namora_cinema_invites where room_id=rid and couple_id=cid)) then raise exception 'Somente o vínculo anfitrião e casais amigos convidados podem entrar.';end if;
@@ -105,7 +105,7 @@ begin
  if uid=r.host_id then update public.namora_cinema_rooms set expires_at=now()+interval '10 minutes' where id=rid;end if;
  if act in ('invite','revoke') then
  if cid<>r.host_couple then raise exception 'Somente o casal anfitrião pode convidar.';end if;
- target:=(payload->>'couple')::uuid;
+ target:=(req->>'couple')::uuid;
  if target is null or target=cid then raise exception 'Escolha um casal amigo.';end if;
  if act='invite' then
  if not namora_private.social_friend(cid,target) then raise exception 'Aceitem a amizade antes de convidar.';end if;
@@ -119,32 +119,32 @@ begin
  end if;
  if act='media' then
  if uid<>r.host_id then raise exception 'Somente quem criou a sala controla a sessão.';end if;
- if payload->>'mode' not in('idle','screen','video') then raise exception 'Modo inválido.';end if;
- vurl:=coalesce(payload->>'url','');
- if payload->>'mode'='video' and (length(vurl)>2000 or vurl!~* '^https://[^[:space:]]+\.(mp4|webm)(\?[^[:space:]]*)?$') then raise exception 'Use um link HTTPS direto de vídeo MP4 ou WebM.';end if;
- update public.namora_cinema_rooms set mode=payload->>'mode',media_url=case when payload->>'mode'='video' then vurl else '' end,playing=false,position=0,updated_at=now(),epoch=gen_random_uuid() where id=rid returning * into r;
+ if req->>'mode' not in('idle','screen','video') then raise exception 'Modo inválido.';end if;
+ vurl:=coalesce(req->>'url','');
+ if req->>'mode'='video' and (length(vurl)>2000 or vurl!~* '^https://[^[:space:]]+\.(mp4|webm)(\?[^[:space:]]*)?$') then raise exception 'Use um link HTTPS direto de vídeo MP4 ou WebM.';end if;
+ update public.namora_cinema_rooms set mode=req->>'mode',media_url=case when req->>'mode'='video' then vurl else '' end,playing=false,position=0,updated_at=now(),epoch=gen_random_uuid() where id=rid returning * into r;
  delete from public.namora_cinema_signals where room_id=rid;
  return to_jsonb(r);
  end if;
  if act='playback' then
- if uid<>r.host_id or r.mode<>'video' or r.epoch<>(payload->>'epoch')::uuid then raise exception 'A reprodução mudou. Atualize a sala.';end if;
- update public.namora_cinema_rooms set playing=coalesce((payload->>'playing')::boolean,false),position=greatest(0,least(864000,(payload->>'position')::double precision)),updated_at=now() where id=rid;
+ if uid<>r.host_id or r.mode<>'video' or r.epoch<>(req->>'epoch')::uuid then raise exception 'A reprodução mudou. Atualize a sala.';end if;
+ update public.namora_cinema_rooms set playing=coalesce((req->>'playing')::boolean,false),position=greatest(0,least(864000,(req->>'position')::double precision)),updated_at=now() where id=rid;
  return '{"ok":true}'::jsonb;
  end if;
  if act='signal' then
- if r.mode<>'screen' or r.epoch<>(payload->>'epoch')::uuid then raise exception 'Esta transmissão terminou.';end if;
- target:=(payload->>'target')::uuid;
+ if r.mode<>'screen' or r.epoch<>(req->>'epoch')::uuid then raise exception 'Esta transmissão terminou.';end if;
+ target:=(req->>'target')::uuid;
  select x.* into q from public.namora_cinema_people x join public.namora_members m on m.user_id=x.user_id and m.couple_id=x.couple_id
  where x.room_id=rid and x.user_id=target and x.last_seen>now()-interval '2 minutes' and (x.couple_id=r.host_couple or (namora_private.social_friend(x.couple_id,r.host_couple) and exists(select 1 from public.namora_cinema_invites where room_id=rid and couple_id=x.couple_id)));
  if q.user_id is null or target=uid or (uid<>r.host_id and target<>r.host_id) then raise exception 'Destino da transmissão inválido.';end if;
- if (coalesce(payload->'signal'->>'type','') not in('offer','answer','ice')) or payload->'signal' is null or octet_length((payload->'signal')::text)>50000 then raise exception 'Sinal inválido.';end if;
- if (payload->'signal'->>'type'='offer' and uid<>r.host_id) or(payload->'signal'->>'type'='answer' and target<>r.host_id) then raise exception 'Sinal inválido.';end if;
+ if (coalesce(req->'signal'->>'type','') not in('offer','answer','ice')) or req->'signal' is null or octet_length((req->'signal')::text)>50000 then raise exception 'Sinal inválido.';end if;
+ if (req->'signal'->>'type'='offer' and uid<>r.host_id) or(req->'signal'->>'type'='answer' and target<>r.host_id) then raise exception 'Sinal inválido.';end if;
  if(select count(*) from public.namora_cinema_signals where room_id=rid and sender=uid and created_at>now()-interval '1 minute')>400 then raise exception 'Aguarde para conectar novamente.';end if;
- insert into public.namora_cinema_signals(room_id,sender,recipient,sender_client,recipient_client,epoch,payload)values(rid,uid,target,client,q.client_id,r.epoch,payload->'signal');
+ insert into public.namora_cinema_signals(room_id,sender,recipient,sender_client,recipient_client,epoch,payload)values(rid,uid,target,client,q.client_id,r.epoch,req->'signal');
  return '{"ok":true}'::jsonb;
  end if;
  if act='message' then
- body:=btrim(payload->>'body');if coalesce(length(body),0) not between 1 and 1000 then raise exception 'Escreva até 1.000 caracteres.';end if;
+ body:=btrim(req->>'body');if coalesce(length(body),0) not between 1 and 1000 then raise exception 'Escreva até 1.000 caracteres.';end if;
  if(select count(*) from public.namora_cinema_messages where room_id=rid and sender=uid and created_at>now()-interval '1 minute')>=30 then raise exception 'Aguarde um instante para enviar mais mensagens.';end if;
  insert into public.namora_cinema_messages(room_id,sender,body)values(rid,uid,body);return '{"ok":true}'::jsonb;
  end if;
@@ -153,7 +153,7 @@ begin
  return jsonb_build_object('room',to_jsonb(r),'clock',now(),
  'people',coalesce((select jsonb_agg(jsonb_build_object('user_id',x.user_id,'client_id',x.client_id,'couple_id',x.couple_id,'name',m.name)) from public.namora_cinema_people x join public.namora_members m on m.user_id=x.user_id and m.couple_id=x.couple_id where x.room_id=rid and x.last_seen>now()-interval '2 minutes' and(x.couple_id=r.host_couple or (namora_private.social_friend(x.couple_id,r.host_couple) and exists(select 1 from public.namora_cinema_invites where room_id=rid and couple_id=x.couple_id)))),'[]'::jsonb),
  'invited',coalesce((select jsonb_agg(couple_id) from public.namora_cinema_invites where room_id=rid),'[]'::jsonb),
- 'signals',coalesce((select jsonb_agg(to_jsonb(s) order by s.id) from public.namora_cinema_signals s where s.room_id=rid and s.recipient=uid and s.recipient_client=client and s.epoch=r.epoch and s.id>coalesce((payload->>'after')::bigint,0)),'[]'::jsonb),
+ 'signals',coalesce((select jsonb_agg(to_jsonb(s) order by s.id) from public.namora_cinema_signals s where s.room_id=rid and s.recipient=uid and s.recipient_client=client and s.epoch=r.epoch and s.id>coalesce((req->>'after')::bigint,0)),'[]'::jsonb),
  'messages',coalesce((select jsonb_agg(to_jsonb(x) order by x.id) from(select z.id,z.body,z.sender,z.created_at,coalesce(m.name,'Participante') name from public.namora_cinema_messages z left join public.namora_members m on m.user_id=z.sender where z.room_id=rid order by z.id desc limit 60)x),'[]'::jsonb));
 end;$$;
 revoke all on function namora_private.cinema_action(jsonb) from public,anon;
