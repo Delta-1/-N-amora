@@ -99,3 +99,9 @@ Conversa abre contatos e depois uma tela dedicada, com volta para início e comp
 O login oferece mostrar/ocultar senha e **Manter conectado**. Desmarcar usa armazenamento da sessão e interrompe os serviços persistentes locais. Android oferece bloqueio opcional por biometria ou credencial do dispositivo, implementado pelo sistema, sem acesso à digital. Precisa de bloqueio de tela cadastrado; Android 8 usa a credencial do dispositivo. É proteção local da sessão já autenticada, não um novo login no servidor. Sair da conta remove a sessão nativa e desabilita o bloqueio.
 
 Aplicar `supabase/amora-invite-upgrade.sql` antes da publicação. As chaves Gemini/ElevenLabs continuam configuráveis e criptografadas no servidor; nenhuma chave global de produção foi fornecida para esta atualização, e cobrança por usuário continua fora do escopo.
+
+### Versão 3.4: vínculo depois do login e mapa em tela cheia
+
+Após entrar na conta, é possível adiar a vinculação e usar **Apps → Entrar com código** ou **Configurações → Meu app → Entrar com código**. O mesmo atalho aparece no mapa. O campo aceita convites novos de 10 caracteres e antigos de 16. Uma conta que já está em outro cantinho precisa confirmar a desvinculação antes de confirmar o novo convite; os registros não são transferidos.
+
+O mapa ocupa toda a tela e identifica os balões pelo nome, inicial e cor fixa de cada integrante. O painel inferior pode ser expandido, recolhido e arrastado, com atalhos para pessoas, lugares/chegadas, passos e GPS. Toque num perfil para ver a última atualização, precisão e centralizar; os botões flutuantes mostram todos, centralizam você e abrem Apps. Posições sem atualização por 15 minutos saem do mapa. Na demonstração, as posições são fictícias e os controles de compartilhamento ficam desabilitados.

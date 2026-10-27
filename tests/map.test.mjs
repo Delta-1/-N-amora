@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import ts from 'typescript';
+const source=ts.transpileModule(fs.readFileSync('web/map-model.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const {activeLocations,memberColor}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const now=1800000000000,p={userId:'one',latitude:'-10.995',longitude:'-68.745',accuracy:18,updatedAt:now};
+test('only recent GPS positions appear, and future timestamps do not keep a person visible forever',()=>{assert.deepEqual(activeLocations([p,{...p,userId:'old',updatedAt:now-900000},{...p,userId:'future',updatedAt:now+120000}],now),[p]);});
+test('invalid and empty coordinates never become a marker at zero or outside the earth',()=>{for(const bad of [{latitude:''},{longitude:' '},{latitude:'NaN'},{latitude:'91'},{longitude:'-181'},{latitude:'Infinity'}])assert.equal(activeLocations([{...p,...bad}],now).length,0);assert.equal(activeLocations([{...p,latitude:'0',longitude:'0'}],now).length,1);});
+test('profile colors remain stable when the other partner has stopped sharing or locations reorder',()=>{assert.equal(memberColor({slot:2}),'sage');assert.equal(memberColor({slot:1}),'rose');assert.equal(memberColor(undefined),'rose');const slots=[{slot:2},{slot:1}];assert.deepEqual(slots.map(memberColor),['sage','rose']);});
