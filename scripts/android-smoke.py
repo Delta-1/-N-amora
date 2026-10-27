@@ -148,14 +148,18 @@ try:
     wait_ui(lambda x: 'Comunidade' in x and 'Apps' in x, 'demo enters the complete mobile shell')
     evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(getComputedStyle(c).display==='none')throw Error('Rotating menu missing');const buttons=Array.from(c.querySelectorAll('[data-visible=true]'));if(buttons.length!==3||buttons.some(x=>{const r=x.getBoundingClientRect();return r.width<40||r.left<0||r.right>innerWidth||r.bottom>innerHeight;}))throw Error('Rotating shortcuts clipped');return 'Three rotating shortcuts fit the phone';})()")
     xml=wait_ui(lambda x:'Menu giratório' in x and 'Comunidade' in x,'rotating menu ready for a finger gesture')
-    def shortcut_center(label):
-        node=next(n for n in ET.fromstring(xml).iter('node') if n.get('clickable')=='true' and (n.get('text','')==label or n.get('content-desc','')==label))
-        x1,y1,x2,y2=map(int,re.findall(r'-?\d+',node.get('bounds')))
-        return (x1+x2)//2,(y1+y2)//2
-    sx,sy=shortcut_center('Comunidade');ex,ey=shortcut_center('Mapa')
+    import json
+    # UIAutomator can mark the page heading clickable through the parent's touch handler.
+    # Use the actual DOM shortcuts and map CSS coordinates into the native WebView bounds.
+    points=json.loads(evaluate('main', "(()=>{const center=id=>{const r=document.querySelector('.corner-menu [data-app='+id+']').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]};window.__rotaryTrace=[];for(const t of ['pointerdown','pointerup','pointercancel'])document.addEventListener(t,e=>window.__rotaryTrace.push({t,p:e.pointerType,b:e.button,app:e.target.closest('[data-app]')?.dataset.app,x:e.clientX,y:e.clientY}),true);return JSON.stringify({start:center('community'),end:center('map'),width:innerWidth,height:innerHeight})})()"))
+    view=next(n for n in ET.fromstring(xml).iter('node') if n.get('class')=='android.webkit.WebView')
+    vx1,vy1,vx2,vy2=map(int,re.findall(r'-?\d+',view.get('bounds')))
+    def screen_point(p):return round(vx1+p[0]*(vx2-vx1)/points['width']),round(vy1+p[1]*(vy2-vy1)/points['height'])
+    sx,sy=screen_point(points['start']);ex,ey=screen_point(points['end'])
+    print('Rotary finger coordinates:',sx,sy,ex,ey,flush=True)
     shell('input','swipe',str(sx),str(sy),str(ex),str(ey),'650')
     wait_ui(lambda x:'Apps' in x and 'Nosso perfil' in x,'finger swipe settles on another group')
-    evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(c.dataset.index==='0'||c.dataset.phase!=='idle')throw Error('Swipe did not rotate');if(!document.querySelector('.social-section-head')?.textContent.includes('Comunidade'))throw Error('Drag opened an app');return 'Finger swipe rotates without accidental navigation';})()")
+    evaluate('main', "(()=>{const c=document.querySelector('.corner-menu');if(c.dataset.index==='0'||c.dataset.phase!=='idle')throw Error('Swipe did not rotate '+JSON.stringify({index:c.dataset.index,phase:c.dataset.phase,trace:window.__rotaryTrace}));if(!document.querySelector('.social-section-head')?.textContent.includes('Comunidade'))throw Error('Drag opened an app');return 'Finger swipe rotates without accidental navigation';})()")
     screenshot('rotating-menu')
     evaluate('main', "document.querySelector('.corner-menu').dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true}))")
     screenshot('community')
