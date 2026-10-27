@@ -9,7 +9,7 @@
 .corner-shell.camera-mode>.topbar,.camera-mode .page-intro,.camera-mode .demo-banner,.camera-mode .invite-strip{display:none!important}
 .corner-shell.camera-mode>.main-content{margin:0!important;padding:0!important;max-width:none;width:100%;height:100dvh}
 .camera-mode .tab-stage{height:100%;animation:none}
-.camera-mode .camera-studio{position:relative;isolation:isolate;max-width:none;height:100dvh;min-height:0;border:0;border-radius:0;background:#06060b;padding:0;margin:0;display:block}
+.camera-mode .camera-studio{position:relative;isolation:isolate;max-width:none;max-height:none;height:100dvh;min-height:0;border:0;border-radius:0;background:#06060b;padding:0;margin:0;display:block}
 .camera-mode .camera-preview{position:absolute;inset:0;aspect-ratio:auto;width:100%;height:100%;max-height:none;border:0;border-radius:0;margin:0}
 .camera-mode .camera-preview>video{width:100%;height:100%;object-fit:cover}
 .camera-mode .camera-top{position:absolute;top:0;left:0;right:0;z-index:3;padding:max(12px,env(safe-area-inset-top)) 16px 32px;background:linear-gradient(#0009,transparent);color:white;display:flex;gap:12px;align-items:center}
